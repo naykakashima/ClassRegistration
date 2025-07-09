@@ -1,6 +1,7 @@
 ﻿using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 {
@@ -17,6 +18,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
         {
             await _db.Classes.AddAsync(newClass, cancellationToken);
             await _db.SaveChangesAsync(cancellationToken);
+        }
+        public async Task<Class?> GetByIdAsync(Guid classId)
+        {
+            // Eager-load registrations if needed
+            return await _db.Classes
+                .Include(c => c.Registrations)
+                .FirstOrDefaultAsync(c => c.Id == classId);
         }
     }
 }

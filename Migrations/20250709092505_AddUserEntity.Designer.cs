@@ -4,6 +4,7 @@ using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClassRegistrationApplication2025.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250709092505_AddUserEntity")]
+    partial class AddUserEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,8 +71,9 @@ namespace ClassRegistrationApplication2025.Migrations
                     b.Property<DateTime>("RegisteredAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -79,34 +83,7 @@ namespace ClassRegistrationApplication2025.Migrations
 
                     b.HasIndex("ClassId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("Registrations");
-                });
-
-            modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserID")
-                        .IsUnique();
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.Registration", b =>
@@ -117,23 +94,10 @@ namespace ClassRegistrationApplication2025.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ClassRegistrationApplication2025.Domain.Entities.User", "User")
-                        .WithMany("Registrations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Class");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.Class", b =>
-                {
-                    b.Navigation("Registrations");
-                });
-
-            modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.User", b =>
                 {
                     b.Navigation("Registrations");
                 });

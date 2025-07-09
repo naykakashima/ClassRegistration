@@ -1,12 +1,25 @@
-﻿namespace ClassRegistrationApplication2025.Domain.Entities
+﻿#nullable disable
+
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ClassRegistrationApplication2025.Domain.Entities
 {
     public class Registration
     {
         public Guid Id { get; set; }
+
+        // Class relationship
+        [ForeignKey("Class")]
         public Guid ClassId { get; set; }
-        public required Class Class { get; set; }
-        public required string UserId { get; set; }
-        public required string UserName { get; set; }
+        public Class Class { get; set; }
+
+        // User relationship (GUID-based)
+        [ForeignKey("User")]
+        public Guid UserId { get; set; } // References User.Id (GUID)
+        public User User { get; set; }
+
+        // Denormalized for display/audit
+        public string UserName { get; set; }
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+using ClassRegistrationApplication2025.Domain.Enums;
 
 namespace ClassRegistrationApplication2025.Application.UseCases
 {
@@ -32,6 +33,5 @@ namespace ClassRegistrationApplication2025.Application.UseCases
 
             await _classRepo.AddAsync(newClass, ct);
         }
-
     }
 }

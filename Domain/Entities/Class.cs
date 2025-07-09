@@ -1,4 +1,6 @@
-﻿namespace ClassRegistrationApplication2025.Domain.Entities
+﻿using ClassRegistrationApplication2025.Domain.Enums;
+
+namespace ClassRegistrationApplication2025.Domain.Entities
 {
     public class Class
     {
@@ -11,12 +13,6 @@
         public required string Presenter { get; set; }
         public ClassStatus Status { get; set; }
         public List<Registration> Registrations { get; set; } = new();
-    }
-
-    public enum ClassStatus
-    {
-        Open,
-        Closed
     }
 
 }

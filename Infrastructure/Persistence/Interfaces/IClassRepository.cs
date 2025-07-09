@@ -5,5 +5,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
     public interface IClassRepository
     {
         Task AddAsync(Class newClass, CancellationToken cancellationToken = default);
+        Task<Class?> GetByIdAsync(Guid classId);
     }
 }
