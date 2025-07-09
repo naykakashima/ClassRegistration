@@ -1,0 +1,22 @@
+﻿using ClassRegistrationApplication2025.Domain.Entities;
+using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
+using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+
+namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
+{
+    public class ClassRepository : IClassRepository
+    {
+        private readonly AppDbContext _db;
+
+        public ClassRepository(AppDbContext db)
+        {
+            _db = db;
+        }
+
+        public async Task AddAsync(Class newClass, CancellationToken cancellationToken = default)
+        {
+            await _db.Classes.AddAsync(newClass, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+}

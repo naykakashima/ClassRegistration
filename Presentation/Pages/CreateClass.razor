@@ -1,0 +1,93 @@
+﻿@page "/create-class"
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Presentation.Pages.Validators
+
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@inject CreateClassUseCase UseCase
+
+<h3>Create Class</h3>
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudForm Model="@formModel"
+                     @ref="form"
+                     @bind-IsValid="@success"
+                     @bind-Errors="@errors"
+                     Validator="validator.Validate">
+
+                <MudTextField T="string"
+                              @bind-Value="formModel.ClassName"
+                              For="@(() => formModel.ClassName)"
+                              Label="Class Name"
+                              Required="true"
+                              RequiredError="Class Name is required"
+                              OnBlur="@(() => SetTouched(nameof(formModel.ClassName)))"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.ClassName))))" />
+
+
+                <MudTextField T="string"
+                              @bind-Value="formModel.PresenterName"
+                              For="@(() => formModel.PresenterName)"
+                              Label="Presenter Name"
+                              Required="true"
+                              RequiredError="Presenter Name is required"
+                              OnBlur="@(() => SetTouched(nameof(formModel.PresenterName)))"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.PresenterName))))" />
+
+                <MudDatePicker T="DateTime?"
+                              @bind-Date="formModel.Date"
+                              Label="Date"
+                              For="@(() => formModel.Date)" 
+                              Validation="@(validator.ValidateValue)" />
+
+                <MudTimePicker T="TimeSpan?"
+                              @bind-Time="formModel.StartTime"
+                              Label="Start Time"
+                              For="@(() => formModel.StartTime)"
+                              Validation="@(validator.ValidateValue)" />
+
+                <MudTimePicker T="TimeSpan?"
+                              @bind-Time="formModel.EndTime"
+                              Label="End Time"
+                              For="@(() => formModel.EndTime)"
+                              Validation="@(validator.ValidateValue)" />
+
+                <MudNumericField T="int"
+                              @bind-Value="formModel.MaxSlots"
+                              Label="Max Slots"
+                              For="@(() => formModel.MaxSlots)"
+                              OnBlur="@(() => SetTouched(nameof(formModel.MaxSlots)))"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.MaxSlots))))" />
+
+                <MudButton OnClick="HandleValidSubmit" Disabled="@(!success)">Submit</MudButton>
+
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    bool success;
+    string[] errors = { };
+    MudForm form; 
+    private CreateClassDto formModel = new();
+    private CreateClassDtoFluentValidator validator = new();
+    Dictionary<string, bool> touchedFields = new();
+    bool HasTouched(string fieldName) => touchedFields.TryGetValue(fieldName, out var touched) && touched;
+    void SetTouched(string fieldName) => touchedFields[fieldName] = true;
+
+    private async Task HandleValidSubmit()
+    {
+
+        await form.Validate(); 
+
+        if (!success)
+            return;
+
+        await UseCase.ExecuteAsync(formModel);
+    }
+}
