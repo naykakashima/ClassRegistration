@@ -7,6 +7,7 @@ using ClassRegistrationApplication2025.Presentation.Components;
 using ClassRegistrationApplication2025.Presentation.Pages.Validators;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);

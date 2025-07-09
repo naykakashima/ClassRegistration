@@ -1,7 +1,6 @@
-﻿#nullable enable
+﻿#nullable disable
 
 namespace ClassRegistrationApplication2025.Application.DTOs
-
 
 {
         public class CreateClassDto

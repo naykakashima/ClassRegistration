@@ -6,9 +6,11 @@
 
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
+@inject ISnackbar Snackbar
 @inject CreateClassUseCase UseCase
+@inject NavigationManager NavigationManager
 
-<h3>Create Class</h3>
+<h3 classname="justify-center">Create Class</h3>
 
 <MudGrid>
     <MudItem xs="12" sm="7">
@@ -16,7 +18,7 @@
             <MudForm Model="@formModel"
                      @ref="form"
                      @bind-IsValid="@success"
-                     @bind-Errors="@errors"
+                     @bind-Errors="@errors" 
                      Validator="validator.Validate">
 
                 <MudTextField T="string"
@@ -73,7 +75,7 @@
 @code {
     bool success;
     string[] errors = { };
-    MudForm form; 
+    MudForm? form; 
     private CreateClassDto formModel = new();
     private CreateClassDtoFluentValidator validator = new();
     Dictionary<string, bool> touchedFields = new();
@@ -82,12 +84,24 @@
 
     private async Task HandleValidSubmit()
     {
+    if (form is null) return;
 
-        await form.Validate(); 
+    await form.Validate(); 
 
-        if (!success)
-            return;
+    if (!success)
+        return;
 
-        await UseCase.ExecuteAsync(formModel);
+    await UseCase.ExecuteAsync(formModel);
+
+    Snackbar.Add("Class successfully created!", Severity.Success);
+
+    // Reset everything to initial state
+    formModel = new CreateClassDto();
+    touchedFields.Clear();
+
+    // Clear MudForm's internal state (errors, touched flags, validation flags, etc.)
+    form.ResetValidation(); 
+
+    NavigationManager.NavigateTo("/");
     }
 }
