@@ -36,8 +36,16 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                     Role = Role.User
                 };
 
-                _db.Users.Add(user);
-                await _db.SaveChangesAsync();
+                try
+                {
+                    _db.Users.Add(user);
+                    await _db.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate") == true)
+                {
+                    // Duplicate user detected, likely due to race condition or refresh
+                    user = await _db.Users.FirstAsync(u => u.UserID == adUserId);
+                }
             }
 
             _cachedUser = new UserDto

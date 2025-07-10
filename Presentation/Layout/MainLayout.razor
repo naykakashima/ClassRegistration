@@ -1,6 +1,11 @@
-﻿@using Microsoft.AspNetCore.Components.Authorization
+﻿@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using MudBlazor; 
+@inject AuthenticationStateProvider AuthProvider
+@inject IUserService UserService
+@inject IWebHostEnvironment Env
+@inject ISnackbar Snackbar
 @inherits LayoutComponentBase
 @inject NavigationManager Navigation
 
@@ -17,12 +22,12 @@
         <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
         <AuthorizeView>
             <Authorized>
+                @{
+                    var cleanId = context.User.Identity?.Name?.Split('\\').Last();
+                }
+                <MudText Class="mr-4" Typo="Typo.subtitle2">@cleanId</MudText>
                 <MudButton OnClick="Logout" Color="Color.Inherit">Logout</MudButton>
             </Authorized>
-            <NotAuthorized>
-                <MudButton Href="/login" Match="NavLinkMatch.All" Color="Color.Inherit">Login</MudButton>
-                <MudButton Href="/register" Match="NavLinkMatch.All" Color="Color.Inherit">Register</MudButton>
-            </NotAuthorized>
         </AuthorizeView>
 
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
@@ -51,10 +56,55 @@
     private bool _drawerOpen = true;
     private bool _isDarkMode = true;
     private MudTheme? _theme = null;
+    private bool _userInitDone = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+
+        _theme = new()
+        {
+            PaletteLight = _lightPalette,
+            PaletteDark = _darkPalette,
+            LayoutProperties = new LayoutProperties()
+        };
+
+        // User initialization
+        if (_userInitDone) return;
+        _userInitDone = true;
+
+        var principal = (await AuthProvider.GetAuthenticationStateAsync()).User;
+        var adUser = principal?.Identity?.Name; 
+        var userId = adUser?.Split('\\').Last();
+
+        if (string.IsNullOrWhiteSpace(adUser))
+        {
+            if (Env.IsDevelopment())
+            {
+                adUser = "dev-user";
+            }
+            else
+            {
+                Snackbar.Add("Authentication failed.", Severity.Error);
+                Navigation.NavigateTo("/Error");
+                return;
+            }
+        }
+
+        try
+        {
+            await UserService.GetOrCreateCurrentUserAsync(userId);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Registration error: {ex.Message}", Severity.Error);
+            Navigation.NavigateTo("/Error");
+        }
+    }
 
     private void Logout()
     {
-        Navigation.NavigateTo("authentication/logout");
+        Navigation.NavigateTo("/logout", forceLoad: true);
     }
 
     protected override void OnInitialized()
