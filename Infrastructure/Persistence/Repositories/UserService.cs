@@ -1,4 +1,5 @@
-﻿using ClassRegistrationApplication2025.Domain.Entities;
+﻿using ClassRegistrationApplication2025.Application.DTOs;
+using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Domain.Enums;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
@@ -10,47 +11,55 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
     public class UserService : IUserService
     {
         private readonly AppDbContext _db;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IHttpContextAccessor _http;
+        private UserDto _cachedUser;
 
-        public UserService(AppDbContext db, IHttpContextAccessor httpContextAccessor)
+        public UserService(AppDbContext db, IHttpContextAccessor http)
         {
             _db = db;
-            _httpContextAccessor = httpContextAccessor;
+            _http = http;
         }
 
-        public async Task<User> GetOrCreateCurrentUserAsync(ClaimsPrincipal principal)
+        public async Task<UserDto> GetOrCreateCurrentUserAsync(string adUserId)
         {
-            var adUserId = principal.Identity?.Name; // e.g., "DOMAIN\\user1"
+            if (_cachedUser != null) return _cachedUser;
 
-            if (string.IsNullOrEmpty(adUserId))
-                throw new UnauthorizedAccessException("Not logged in.");
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
 
-            // Search by AD UserID - NOT Guid Id
-            var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
-
-            if (existingUser != null)
-                return existingUser;
-
-            // Auto-create new user with fresh GUID for Id
-            var newUser = new User
+            if (user == null)
             {
-                Id = Guid.NewGuid(),       // Generate new GUID
-                UserID = adUserId,         // Store AD identifier
-                Name = principal.FindFirst(ClaimTypes.Name)?.Value ?? adUserId,
-                Role = DetermineInitialRole(principal)
+                user = new User
+                {
+                    Id = Guid.NewGuid(),
+                    UserID = adUserId,
+                    Name = adUserId,
+                    Role = Role.User
+                };
+
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+            }
+
+            _cachedUser = new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                UserID = user.UserID,
+                Role = user.Role
             };
 
-            _db.Users.Add(newUser);
-            await _db.SaveChangesAsync();
-            return newUser;
+            return _cachedUser;
         }
 
-        private Role DetermineInitialRole(ClaimsPrincipal principal)
+
+        public async Task<bool> IsUserAuthorizedAsync(string adUserId)
         {
-            // Default: All new users are 'User' role
-            return Role.User;
+            var user = await GetOrCreateCurrentUserAsync(adUserId);
+            return user != null;
         }
+
     }
+
 }
-    
+
 

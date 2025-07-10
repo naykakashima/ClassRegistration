@@ -22,7 +22,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 
         public async Task<bool> ExistsAsync(Guid classId, Guid userId)
         {
-            return await _db.Registrations.AnyAsync(r => r.ClassId == classId && r.UserId == userId);
+            return await _db.Registrations
+                .AnyAsync(r => r.ClassId == classId && r.UserId == userId);
         }
 
         public async Task<int> GetCountForClassAsync(Guid classId)
@@ -30,6 +31,19 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Registrations
                 .Where(r => r.ClassId == classId)
                 .CountAsync();
+        }
+
+        public async Task RegisterUserAsync(Guid userId, Guid classId)
+        {
+            var registration = new Registration
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                ClassId = classId,
+                RegisteredAt = DateTime.UtcNow
+            };
+
+            await AddAsync(registration);
         }
     }
 }

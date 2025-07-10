@@ -22,34 +22,22 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             _userService = userService;
         }
 
-        public async Task<Result> ExecuteAsync(Guid classId, ClaimsPrincipal user)
-        {
-            var currentUser = await _userService.GetOrCreateCurrentUserAsync(user);
-            var classEntity = await _classRepository.GetByIdAsync(classId);
+        //public async Task<Result> ExecuteAsync(Guid classId, ClaimsPrincipal userPrincipal)
+        //{
+        //    var user = await _userService.GetOrCreateCurrentUserAsync(userPrincipal);
+        //    if (user == null)
+        //        return Result.Failure("User not recognized.");
 
-            if (classEntity == null)
-                return Result.Failure("Class not found");
+        //    var cls = await _classRepository.GetByIdAsync(classId);
+        //    if (cls == null)
+        //        return Result.Failure("Class not found.");
 
-            if (classEntity.Status != ClassStatus.Open)
-                return Result.Failure("Registration closed");
+        //    var alreadyRegistered = await _registrationRepository.ExistsAsync(classId, user.Id);
+        //    if (alreadyRegistered)
+        //        return Result.Failure("You are already registered for this class.");
 
-            if (await _registrationRepository.ExistsAsync(classId, currentUser.Id))
-                return Result.Failure("Already registered");
-
-            var currentCount = await _registrationRepository.GetCountForClassAsync(classId);
-            if (currentCount >= classEntity.MaxSlots)
-                return Result.Failure("Class full");
-
-            var registration = new Registration
-            {
-                ClassId = classId,
-                UserId = currentUser.Id,
-                UserName = currentUser.Name,
-                RegisteredAt = DateTime.UtcNow
-            };
-
-            await _registrationRepository.AddAsync(registration);
-            return Result.Success();
-        }
+        //    await _registrationRepository.RegisterUserAsync(user.Id, classId);
+        //    return Result.Success();
+        //}
     }
 }

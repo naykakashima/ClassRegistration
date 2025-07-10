@@ -7,5 +7,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task AddAsync(Registration registration);
         Task<bool> ExistsAsync(Guid classId, Guid userId);
         Task<int> GetCountForClassAsync(Guid classId);
+        Task RegisterUserAsync(Guid userId, Guid classId);
     }
 }
