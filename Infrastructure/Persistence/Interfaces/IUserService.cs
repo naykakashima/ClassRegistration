@@ -11,5 +11,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task<bool> IsUserAuthorizedAsync(string adUserId);
         Task<List<UserDto>> GetAllUsersAsync();
         Task<bool> UpdateUserRoleAsync(Guid userId, Role newRole, string actingUserAdId);
+        Task<User> GetUserByAdUserIdAsync(string adUserId, CancellationToken ct = default);
+
     }
 }

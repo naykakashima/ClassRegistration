@@ -2,6 +2,7 @@
 @using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using System.Security.Claims
@@ -11,6 +12,7 @@
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar  
+@inject IUserService UserService
 
 
 
@@ -90,6 +92,8 @@
     private bool IsLoading = true;
     private bool IsRegistering = false;
     private string ErrorMessage;
+    private string? _currentUserId;
+    private UserDto? _currentUser;
 
     // Computed properties
     private bool RegistrationDisabled => 
@@ -106,6 +110,15 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadClassDetails();
+
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        if (!string.IsNullOrEmpty(_currentUserId))
+        {
+            _currentUser = await UserService.GetOrCreateCurrentUserAsync(_currentUserId); // <-- this now updates the field
+        }
+
     }
 
     private async Task LoadClassDetails()
@@ -113,7 +126,7 @@
         try
         {
             var result = await GetClassDetailsUseCase.ExecuteAsync(ClassId);
-            
+
             if (result.IsSuccess)
             {
                 Class = result.Value;
@@ -141,7 +154,8 @@
         try
         {
             var authState = await AuthProvider.GetAuthenticationStateAsync();
-            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = _currentUserId;
+            var Name = _currentUser?.Name;
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -149,7 +163,7 @@
                 return;
             }
 
-            var result = await RegisterUseCase.ExecuteAsync(ClassId, userId);
+            var result = await RegisterUseCase.ExecuteAsync(ClassId, userId, Name);
 
             if (result.IsSuccess)
             {

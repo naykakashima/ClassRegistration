@@ -8,5 +8,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task AddAsync(Class newClass, AppDbContext context, CancellationToken ct);
         Task<Class?> GetByIdAsync(Guid classId);
         Task<List<Class>> GetAllAsync();
+        Task<Class> GetClassWithRegistrationsAsync(Guid classId, CancellationToken ct = default);
+
     }
 }

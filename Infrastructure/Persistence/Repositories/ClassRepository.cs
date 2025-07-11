@@ -34,5 +34,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                             .Include(c => c.Registrations)
                             .ToListAsync();
         }
+
+        public async Task<Class> GetClassWithRegistrationsAsync(Guid classId, CancellationToken ct = default)
+        {
+            return await _db.Classes
+                .Include(c => c.Registrations)
+                .FirstOrDefaultAsync(c => c.Id == classId, ct);
+        }
+
     }
 }

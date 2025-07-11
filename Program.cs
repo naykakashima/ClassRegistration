@@ -29,8 +29,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CreateClassUseCase>();
 builder.Services.AddScoped<IValidator<CreateClassDto>, CreateClassDtoFluentValidator>();
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
+builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<GetAllClassesUseCase>();
+builder.Services.AddScoped<GetClassDetailsUseCase>();
+builder.Services.AddScoped<RegisterForClassUseCase>();
 
 builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));
 

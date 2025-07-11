@@ -1,7 +1,11 @@
-﻿using ClassRegistrationApplication2025.Domain.Entities;
+﻿// RegistrationRepository.cs
+using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 {
@@ -24,18 +28,19 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Registrations.AnyAsync(r => r.ClassId == classId && r.UserId == userId);
         }
 
-        public async Task RegisterUserAsync(Guid userId, Guid classId, AppDbContext context, CancellationToken ct)
+        public async Task RegisterUserAsync(Guid userId, Guid classId, string Name, CancellationToken ct)
         {
             var registration = new Registration
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
                 ClassId = classId,
+                UserName = Name,
                 RegisteredAt = DateTime.UtcNow
             };
 
-            context.Registrations.Add(registration);
-            await context.SaveChangesAsync(ct);
+            _db.Registrations.Add(registration);
+            await _db.SaveChangesAsync(ct);
         }
     }
 }

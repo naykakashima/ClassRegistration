@@ -107,6 +107,15 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             await context.SaveChangesAsync();
             return true;
         }
+
+        public async Task<User> GetUserByAdUserIdAsync(string adUserId, CancellationToken ct = default)
+        {
+            using var context = _contextFactory.CreateDbContext();
+            return await context.Users.FirstOrDefaultAsync(u => u.UserID == adUserId, ct);
+        }
+
+
+
     }
 }
 
