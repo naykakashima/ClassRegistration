@@ -1,0 +1,101 @@
+﻿@page "/admin/roles"
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+
+
+@inject IUserService UserService
+@inject AuthenticationStateProvider AuthProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Admin Panel - Role Management</PageTitle>
+
+<MudPaper Class="pa-4">
+    <div class="d-flex align-center justify-space-between mb-2">
+        <MudText Typo="Typo.h5">User Role Management</MudText>
+
+        <MudButton Disabled="@_isLoading" Color="Color.Primary" Variant="Variant.Filled" OnClick="ReloadUsers" StartIcon="@Icons.Material.Filled.Refresh">
+            Refresh Users
+            @if (_isLoading)
+            {
+                <MudProgressCircular Size="Size.Medium" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
+            }
+        </MudButton>
+    </div>
+
+    <MudTable Items="@_users" Hover="true">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>UserID</MudTh>
+            <MudTh>Role</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.UserID</MudTd>
+            <MudTd>@context.Role.ToString()</MudTd>
+            <MudTd>
+                <MudSelect @bind-Value="@_editRoles[context.Id]" Dense="true" Class="mr-2">
+                    @foreach (var role in Enum.GetValues<Role>())
+                    {
+                        <MudSelectItem Value="@role">@role</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudButton Variant="Variant.Text" Size="@Size.Small" OnClick="() => UpdateRole(context.Id)" Color="Color.Primary">Update</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<UserDto> _users = new();
+    private Dictionary<Guid, Role> _editRoles = new();
+    private string _currentUserId;
+    private bool _isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        _users = await UserService.GetAllUsersAsync();
+        _editRoles = _users.ToDictionary(u => u.Id, u => u.Role);
+    }
+
+    private async Task UpdateRole(Guid userId)
+    {
+        try
+        {
+            var newRole = _editRoles[userId];
+            await UserService.UpdateUserRoleAsync(userId, newRole, _currentUserId);
+            Snackbar.Add("Role updated successfully.", Severity.Success);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Snackbar.Add("You're not authorized to change roles.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ReloadUsers()
+    {
+        _isLoading = true;
+        try
+        {
+            _users = await UserService.GetAllUsersAsync();
+            _editRoles = _users.ToDictionary(u => u.Id, u => u.Role);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
+

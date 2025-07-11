@@ -12,23 +12,25 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 {
     public class UserService : IUserService
     {
-        private readonly AppDbContext _db;
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
         private readonly IHttpContextAccessor _http;
         private readonly IOptions<AdSettings> _adSettings;
         private UserDto _cachedUser;
 
-        public UserService(AppDbContext db, IHttpContextAccessor http, IOptions<AdSettings> adSettings)
+        public UserService(IDbContextFactory<AppDbContext> contextFactory, IHttpContextAccessor http, IOptions<AdSettings> adSettings)
         {
-            _db = db;
+            _contextFactory = contextFactory;
             _http = http;
             _adSettings = adSettings;
         }
 
         public async Task<UserDto> GetOrCreateCurrentUserAsync(string adUserId)
         {
+            using var context = _contextFactory.CreateDbContext();
+
             if (_cachedUser != null) return _cachedUser;
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
             var displayName = AdHelper.GetDisplayNameFromAd(adUserId, _adSettings.Value.LdapPath) ?? adUserId;
 
 
@@ -44,13 +46,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 
                 try
                 {
-                    _db.Users.Add(user);
-                    await _db.SaveChangesAsync();
+                    context.Users.Add(user);
+                    await context.SaveChangesAsync();
                 }
                 catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate") == true)
                 {
                     // Duplicate user detected, likely due to race condition or refresh
-                    user = await _db.Users.FirstAsync(u => u.UserID == adUserId);
+                    user = await context.Users.FirstAsync(u => u.UserID == adUserId);
                 }
             }
 
@@ -68,8 +70,42 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 
         public async Task<bool> IsUserAuthorizedAsync(string adUserId)
         {
+            using var context = _contextFactory.CreateDbContext();
+
             var user = await GetOrCreateCurrentUserAsync(adUserId);
             return user != null;
+        }
+
+        public async Task<List<UserDto>> GetAllUsersAsync()
+        {
+            using var context = _contextFactory.CreateDbContext();
+
+            return await context.Users
+                .OrderBy(u => u.Role)
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Name = u.Name,
+                    UserID = u.UserID,
+                    Role = u.Role
+                })
+                .ToListAsync();
+        }
+
+        public async Task<bool> UpdateUserRoleAsync(Guid userId, Role newRole, string actingUserAdId)
+        {
+            using var context = _contextFactory.CreateDbContext();
+
+            var actingUser = await context.Users.FirstOrDefaultAsync(u => u.UserID == actingUserAdId);
+            if (actingUser == null || actingUser.Role != Role.SuperAdmin)
+                throw new UnauthorizedAccessException("Only SuperAdmins can assign roles.");
+
+            var user = await context.Users.FindAsync(userId);
+            if (user == null) return false;
+
+            user.Role = newRole;
+            await context.SaveChangesAsync();
+            return true;
         }
 
     }
