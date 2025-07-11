@@ -1,12 +1,13 @@
 ﻿using ClassRegistrationApplication2025.Domain.Entities;
+using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 {
     public interface IRegistrationRepository
     {
-        Task AddAsync(Registration registration);
+        Task<int> GetRegistrationCountByClassAsync(Guid classId);
         Task<bool> ExistsAsync(Guid classId, Guid userId);
-        Task<int> GetCountForClassAsync(Guid classId);
-        Task RegisterUserAsync(Guid userId, Guid classId);
+        Task RegisterUserAsync(Guid userId, Guid classId, AppDbContext context, CancellationToken ct);
+
     }
 }

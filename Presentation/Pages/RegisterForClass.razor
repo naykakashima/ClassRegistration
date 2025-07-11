@@ -1,0 +1,185 @@
+﻿@page "/register/{ClassId:guid}"
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@using System.Security.Claims
+
+@inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject RegisterForClassUseCase RegisterUseCase
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar  
+
+
+
+<CascadingAuthenticationState>
+    <MudContainer>
+        <MudText Typo="Typo.h4" Class="mb-4">Register for Class</MudText>
+        
+        @if (IsLoading)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText>Loading class details...</MudText>
+        }
+        else if (ErrorMessage != null)
+        {
+            <MudAlert Severity="Severity.Error" Class="my-4">@ErrorMessage</MudAlert>
+        }
+        else if (Class == null)
+        {
+            <MudAlert Severity="Severity.Warning" Class="my-4">Class not found</MudAlert>
+        }
+        else
+        {
+            <MudPaper Class="pa-4" Elevation="2">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.subtitle1">Class Information</MudText>
+                        <MudText>Class Name: @Class.ClassName</MudText>
+                        <MudText>Presenter: @Class.Presenter</MudText>
+                        <MudText>Date: @Class.Date.ToShortDateString()</MudText>
+                        <MudText>Time: @Class.StartTime.ToString(@"hh\:mm") - @Class.EndTime.ToString(@"hh\:mm")</MudText>
+                        <MudText Class="mt-2">
+                            <span>Available Slots: </span>
+                            <MudChip T="string" Color="@GetSlotChipColor()" Variant="Variant.Filled">
+                                @(Class.MaxSlots - Class.RegisteredCount) remaining
+                            </MudChip>
+                        </MudText>
+                    </MudItem>
+                    
+                    <MudItem xs="12" md="6" Class="mt-4 mt-md-0">
+                        <MudPaper Class="pa-4" Elevation="1">
+                            <MudButton Variant="Variant.Filled"
+                                      Color="Color.Primary"
+                                      FullWidth="true"
+                                      OnClick="Register"
+                                      Disabled="@RegistrationDisabled">
+                                @if (IsRegistering)
+                                {
+                                    <MudProgressCircular Color="Color.Inherit" Indeterminate="true" Size="Size.Small" />
+                                    <MudText Class="ml-2">Processing...</MudText>
+                                }
+                                else
+                                {
+                                    <span>Confirm Registration</span>
+                                }
+                            </MudButton>
+                            <MudText Class="mt-2 text-center" Typo="Typo.caption" Color="@RegistrationStatusColor">
+                                @RegistrationStatusText
+                            </MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+            
+            <MudButton Class="mt-4"
+                      Variant="Variant.Text"
+                      Color="Color.Primary"
+                      OnClick="@(() => Navigation.NavigateTo("/classes"))">
+                Back to Classes List
+            </MudButton>
+        }
+    </MudContainer>
+</CascadingAuthenticationState>
+
+@code {
+    [Parameter] public Guid ClassId { get; set; }
+    private ClassDetailDto Class;
+    private bool IsLoading = true;
+    private bool IsRegistering = false;
+    private string ErrorMessage;
+
+    // Computed properties
+    private bool RegistrationDisabled => 
+        IsRegistering || Class?.Status != ClassStatus.Open || Class?.RegisteredCount >= Class?.MaxSlots;
+
+    private Color RegistrationStatusColor => 
+        (Class?.Status != ClassStatus.Open) ? Color.Error : Color.Success;
+
+    private string RegistrationStatusText => 
+        (Class?.Status != ClassStatus.Open) ? "Registration Closed" :
+        (Class?.RegisteredCount >= Class?.MaxSlots) ? "Class Full" :
+        "Open for Registration";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClassDetails();
+    }
+
+    private async Task LoadClassDetails()
+    {
+        try
+        {
+            var result = await GetClassDetailsUseCase.ExecuteAsync(ClassId);
+            
+            if (result.IsSuccess)
+            {
+                Class = result.Value;
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage;
+                Snackbar.Add($"Failed to load class details: {result.ErrorMessage}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"An unexpected error occurred: {ex.Message}";
+            Snackbar.Add(ErrorMessage, Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task Register()
+    {
+        IsRegistering = true;
+        try
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                Snackbar.Add("You must be logged in to register", Severity.Error);
+                return;
+            }
+
+            var result = await RegisterUseCase.ExecuteAsync(ClassId, userId);
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("Registration successful!", Severity.Success);
+                await Task.Delay(1500); // Give user time to see feedback
+                Navigation.NavigateTo("/classes");
+            }
+            else
+            {
+                Snackbar.Add("Registration failed", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Registration error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsRegistering = false;
+        }
+    }
+
+    private Color GetSlotChipColor()
+    {
+        var remaining = Class.MaxSlots - Class.RegisteredCount;
+        return remaining switch
+        {
+            0 => Color.Error,
+            <= 3 => Color.Warning,
+            _ => Color.Success
+        };
+    }
+}

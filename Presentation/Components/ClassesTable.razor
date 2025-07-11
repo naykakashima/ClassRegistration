@@ -1,0 +1,89 @@
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
+@using MudBlazor
+
+<MudTable Items="Classes" Hover="true" Bordered="true" Striped="true" Dense="true">
+    <HeaderContent>
+        <MudTh>Class Name</MudTh>
+        <MudTh>Presenter</MudTh>
+        <MudTh>Date</MudTh>
+        <MudTh>Time</MudTh>
+        <MudTh>Slots</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Action</MudTh>
+    </HeaderContent>
+    
+    <RowTemplate>
+        <MudTd DataLabel="Class Name">@context.ClassName</MudTd>
+        <MudTd DataLabel="Presenter">@context.Presenter</MudTd>
+        <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Time">
+            @context.StartTime.ToString(@"hh\:mm") - @context.EndTime.ToString(@"hh\:mm")
+        </MudTd>
+        <MudTd DataLabel="Slots">
+            <MudProgressLinear Linear="true" 
+                         Value="@(GetProgressPercentage(context))" 
+                         Color="@GetProgressColor(context)" 
+                         Class="my-1" />
+            @context.RegisteredCount / @context.MaxSlots
+        </MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="ClassStatus" Color="@GetStatusColor(context.Status)" Variant="Variant.Filled">
+                @context.Status
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Action">
+            @if (context.Status == ClassStatus.Open && context.RegisteredCount < context.MaxSlots)
+            {
+                <MudButton Variant="Variant.Filled"
+                          Color="Color.Primary"
+                          Size="Size.Small"
+                          OnClick="@(() => OnRegister.InvokeAsync(context.Id))">
+                    Register
+                </MudButton>
+            }
+            else
+            {
+                <MudText Class="grey-text">Unavailable</MudText>
+            }
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter]
+    public List<ClassSummaryDto> Classes { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Guid> OnRegister { get; set; }
+
+    private Color GetStatusColor(ClassStatus status)
+    {
+        return status switch
+        {
+            ClassStatus.Open => Color.Success,
+            ClassStatus.Closed => Color.Error,
+            _ => Color.Default  // Handle any unexpected status
+        };
+    }
+
+    private double GetProgressPercentage(ClassSummaryDto classItem)
+    {
+        if (classItem.MaxSlots == 0) return 0;
+        return (classItem.RegisteredCount * 100.0) / classItem.MaxSlots;
+    }
+
+    private Color GetProgressColor(ClassSummaryDto classItem)
+    {
+        if (classItem.Status != ClassStatus.Open)
+            return Color.Default;
+        
+        var percentage = GetProgressPercentage(classItem);
+        return percentage switch
+        {
+            >= 90 => Color.Error,
+            >= 75 => Color.Warning,
+            _ => Color.Success
+        };
+    }
+}

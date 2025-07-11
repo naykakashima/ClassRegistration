@@ -24,7 +24,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Helpers
 
                 return null;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Optional: log exception
                 return null;

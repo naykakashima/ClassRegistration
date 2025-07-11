@@ -1,0 +1,49 @@
+﻿@page "/classes"
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Presentation.Components
+@using MudBlazor
+@inject GetAllClassesUseCase GetAllClassesUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<MudContainer>
+    <MudText Typo="Typo.h3" Class="mb-4">Available Classes</MudText>
+    
+    @if (isLoading)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+        <MudText>Loading classes...</MudText>
+    }
+    else if (classes == null || !classes.Any())
+    {
+        <MudAlert Severity="Severity.Info">No classes found.</MudAlert>
+    }
+    else
+    {
+        <ClassesTable Classes="classes" OnRegister="Register" />
+    }
+</MudContainer>
+
+@code {
+    private List<ClassSummaryDto> classes = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            classes = await GetAllClassesUseCase.ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load classes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Register(Guid classId) => NavigationManager.NavigateTo($"/register/{classId}");
+}

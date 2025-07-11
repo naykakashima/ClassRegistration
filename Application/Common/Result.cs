@@ -3,29 +3,32 @@
     public class Result
     {
         public bool IsSuccess { get; }
-        public string Error { get; }
+        public string ErrorMessage { get; }
 
-        protected Result(bool isSuccess, string error)
+        protected Result(bool isSuccess, string errorMessage)
         {
             IsSuccess = isSuccess;
-            Error = error;
+            ErrorMessage = errorMessage;
         }
 
-        public static Result Success() => new(true, null);
-        public static Result Failure(string error) => new(false, error);
+        public static Result Success() => new Result(true, null);
+        public static Result Failure(string errorMessage) => new Result(false, errorMessage);
     }
 
     public class Result<T> : Result
     {
         public T Value { get; }
 
-        protected Result(bool isSuccess, T value, string error)
-            : base(isSuccess, error)
+        private Result(T value, bool isSuccess, string errorMessage)
+            : base(isSuccess, errorMessage)
         {
             Value = value;
         }
 
-        public static Result<T> Success(T value) => new(true, value, null);
-        public static new Result<T> Failure(string error) => new(false, default, error);
+        public static Result<T> Success(T value) =>
+            new Result<T>(value, true, null);
+
+        public static new Result<T> Failure(string errorMessage) =>
+            new Result<T>(default, false, errorMessage);
     }
 }

@@ -26,5 +26,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 .Include(c => c.Registrations)
                 .FirstOrDefaultAsync(c => c.Id == classId);
         }
+
+        public async Task<List<Class>> GetAllAsync()
+        {
+            // Include Registrations so we can count them if needed
+            return await _db.Classes
+                            .Include(c => c.Registrations)
+                            .ToListAsync();
+        }
     }
 }

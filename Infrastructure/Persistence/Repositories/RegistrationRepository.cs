@@ -14,26 +14,17 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             _db = db;
         }
 
-        public async Task AddAsync(Registration registration)
+        public async Task<int> GetRegistrationCountByClassAsync(Guid classId)
         {
-            await _db.Registrations.AddAsync(registration);
-            await _db.SaveChangesAsync();
+            return await _db.Registrations.CountAsync(r => r.ClassId == classId);
         }
 
         public async Task<bool> ExistsAsync(Guid classId, Guid userId)
         {
-            return await _db.Registrations
-                .AnyAsync(r => r.ClassId == classId && r.UserId == userId);
+            return await _db.Registrations.AnyAsync(r => r.ClassId == classId && r.UserId == userId);
         }
 
-        public async Task<int> GetCountForClassAsync(Guid classId)
-        {
-            return await _db.Registrations
-                .Where(r => r.ClassId == classId)
-                .CountAsync();
-        }
-
-        public async Task RegisterUserAsync(Guid userId, Guid classId)
+        public async Task RegisterUserAsync(Guid userId, Guid classId, AppDbContext context, CancellationToken ct)
         {
             var registration = new Registration
             {
@@ -43,7 +34,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 RegisteredAt = DateTime.UtcNow
             };
 
-            await AddAsync(registration);
+            context.Registrations.Add(registration);
+            await context.SaveChangesAsync(ct);
         }
     }
 }
