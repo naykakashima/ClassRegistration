@@ -1,9 +1,11 @@
 ﻿using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Domain.Enums;
+using ClassRegistrationApplication2025.Infrastructure.Helpers;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
@@ -12,12 +14,14 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
     {
         private readonly AppDbContext _db;
         private readonly IHttpContextAccessor _http;
+        private readonly IOptions<AdSettings> _adSettings;
         private UserDto _cachedUser;
 
-        public UserService(AppDbContext db, IHttpContextAccessor http)
+        public UserService(AppDbContext db, IHttpContextAccessor http, IOptions<AdSettings> adSettings)
         {
             _db = db;
             _http = http;
+            _adSettings = adSettings;
         }
 
         public async Task<UserDto> GetOrCreateCurrentUserAsync(string adUserId)
@@ -25,6 +29,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             if (_cachedUser != null) return _cachedUser;
 
             var user = await _db.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
+            var displayName = AdHelper.GetDisplayNameFromAd(adUserId, _adSettings.Value.LdapPath) ?? adUserId;
+
 
             if (user == null)
             {
@@ -32,7 +38,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 {
                     Id = Guid.NewGuid(),
                     UserID = adUserId,
-                    Name = adUserId,
+                    Name = displayName,
                     Role = Role.User
                 };
 

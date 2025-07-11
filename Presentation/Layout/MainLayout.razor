@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
 @using MudBlazor; 
+@using ClassRegistrationApplication2025.Application.DTOs
 @inject AuthenticationStateProvider AuthProvider
 @inject IUserService UserService
 @inject IWebHostEnvironment Env
@@ -25,7 +26,19 @@
                 @{
                     var cleanId = context.User.Identity?.Name?.Split('\\').Last();
                 }
-                <MudText Class="mr-4" Typo="Typo.subtitle2">@cleanId</MudText>
+
+                @if (_currentUser is not null)
+                {
+                    <MudText Class="mr-4" Typo="Typo.subtitle2">@_currentUser.Name</MudText>
+                }
+                else if (cleanId is not null)
+                {
+                    <MudText Class="mr-4" Typo="Typo.subtitle2">@cleanId</MudText>
+                }
+                else
+                {
+                    <MudText Class="mr-4" Typo="Typo.subtitle2">Loading...</MudText>
+                }
                 <MudButton OnClick="Logout" Color="Color.Inherit">Logout</MudButton>
             </Authorized>
         </AuthorizeView>
@@ -57,6 +70,7 @@
     private bool _isDarkMode = true;
     private MudTheme? _theme = null;
     private bool _userInitDone = false;
+    private UserDto? _currentUser;
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,12 +83,11 @@
             LayoutProperties = new LayoutProperties()
         };
 
-        // User initialization
         if (_userInitDone) return;
         _userInitDone = true;
 
         var principal = (await AuthProvider.GetAuthenticationStateAsync()).User;
-        var adUser = principal?.Identity?.Name; 
+        var adUser = principal?.Identity?.Name;
         var userId = adUser?.Split('\\').Last();
 
         if (string.IsNullOrWhiteSpace(adUser))
@@ -82,6 +95,7 @@
             if (Env.IsDevelopment())
             {
                 adUser = "dev-user";
+                userId = "dev-user";
             }
             else
             {
@@ -93,7 +107,7 @@
 
         try
         {
-            await UserService.GetOrCreateCurrentUserAsync(userId);
+            _currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
         }
         catch (Exception ex)
         {

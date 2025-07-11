@@ -5,13 +5,15 @@ using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories;
 using ClassRegistrationApplication2025.Presentation.Components;
 using ClassRegistrationApplication2025.Presentation.Pages.Validators;
-using Microsoft.AspNetCore.Authentication.Negotiate;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.EntityFrameworkCore;
+using ClassRegistrationApplication2025.Infrastructure;
 using MudBlazor;
 using MudBlazor.Services;
+using System.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,10 +33,11 @@ builder.Services.AddScoped<IValidator<CreateClassDto>, CreateClassDtoFluentValid
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));
+
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();
 
-builder.Services.AddAuthorizationCore();
 builder.Services.AddAuthorizationCore();
 
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
