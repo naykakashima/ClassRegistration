@@ -14,10 +14,10 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             _db = db;
         }
 
-        public async Task AddAsync(Class newClass, CancellationToken cancellationToken = default)
+        public async Task AddAsync(Class newClass, AppDbContext context, CancellationToken ct)
         {
-            await _db.Classes.AddAsync(newClass, cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
+            context.Classes.Add(newClass);
+            await context.SaveChangesAsync(ct);
         }
         public async Task<Class?> GetByIdAsync(Guid classId)
         {

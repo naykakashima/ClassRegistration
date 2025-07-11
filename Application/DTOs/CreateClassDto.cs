@@ -1,5 +1,7 @@
 ﻿#nullable disable
 
+using ClassRegistrationApplication2025.Domain.Entities;
+
 namespace ClassRegistrationApplication2025.Application.DTOs
 
 {
@@ -11,6 +13,8 @@ namespace ClassRegistrationApplication2025.Application.DTOs
             public TimeSpan? StartTime { get; set; }
             public TimeSpan? EndTime { get; set; }
             public int MaxSlots { get; set; }
-        }
+            public Guid CreatedByUserId { get; set; }
+            public User CreatedByUser { get; set; }
+    }
 
 }

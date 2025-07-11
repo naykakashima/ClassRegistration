@@ -32,6 +32,9 @@ namespace ClassRegistrationApplication2025.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
@@ -52,6 +55,8 @@ namespace ClassRegistrationApplication2025.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
 
                     b.ToTable("Classes");
                 });
@@ -107,6 +112,17 @@ namespace ClassRegistrationApplication2025.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.Class", b =>
+                {
+                    b.HasOne("ClassRegistrationApplication2025.Domain.Entities.User", "CreatedByUser")
+                        .WithMany("ClassesCreated")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+                });
+
             modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.Registration", b =>
                 {
                     b.HasOne("ClassRegistrationApplication2025.Domain.Entities.Class", "Class")
@@ -133,6 +149,8 @@ namespace ClassRegistrationApplication2025.Migrations
 
             modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.User", b =>
                 {
+                    b.Navigation("ClassesCreated");
+
                     b.Navigation("Registrations");
                 });
 #pragma warning restore 612, 618

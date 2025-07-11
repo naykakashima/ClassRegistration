@@ -33,6 +33,8 @@ builder.Services.AddScoped<IValidator<CreateClassDto>, CreateClassDtoFluentValid
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)

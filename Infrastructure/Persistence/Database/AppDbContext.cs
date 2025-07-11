@@ -14,7 +14,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
         {
             modelBuilder.Entity<User>(entity =>
             {
-                // Recommend index on the AD identifier
                 entity.HasIndex(u => u.UserID).IsUnique();
             });
 
@@ -31,8 +30,16 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
                       .HasForeignKey(r => r.UserId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
+            // Class CreatedByUser relationship
+            modelBuilder.Entity<Class>(entity =>
+            {
+                entity.HasOne(c => c.CreatedByUser)
+                      .WithMany(u => u.ClassesCreated)
+                      .HasForeignKey(c => c.CreatedByUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
-
 
 }

@@ -107,9 +107,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             await context.SaveChangesAsync();
             return true;
         }
-
     }
-
 }
 
 

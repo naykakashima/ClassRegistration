@@ -3,12 +3,18 @@
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Presentation.Pages.Validators
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
+@inject AuthenticationStateProvider AuthProvider
 @using MudBlazor
+@using static System.Net.WebRequestMethods
 @inject ISnackbar Snackbar
 @inject CreateClassUseCase UseCase
 @inject NavigationManager NavigationManager
+@inject IUserService UserService
+@inject IHttpContextAccessor _http
 
 <h3 classname="justify-center">Create Class</h3>
 
@@ -79,29 +85,45 @@
     private CreateClassDto formModel = new();
     private CreateClassDtoFluentValidator validator = new();
     Dictionary<string, bool> touchedFields = new();
+    private string? _currentUserId;
+
     bool HasTouched(string fieldName) => touchedFields.TryGetValue(fieldName, out var touched) && touched;
     void SetTouched(string fieldName) => touchedFields[fieldName] = true;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+    }
+
     private async Task HandleValidSubmit()
     {
-    if (form is null) return;
+        if (form is null || string.IsNullOrWhiteSpace(_currentUserId)) return;
 
-    await form.Validate(); 
+        await form.Validate();
+        if (!success) return;
 
-    if (!success)
-        return;
+        try
+        {
+            var currentUser = await UserService.GetOrCreateCurrentUserAsync(_currentUserId);
+            await UseCase.ExecuteAsync(formModel, currentUser.UserID);
 
-    await UseCase.ExecuteAsync(formModel);
+            Snackbar.Add("Class successfully created!", Severity.Success);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+            return;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to create class: " + ex.Message, Severity.Error);
+            return;
+        }
 
-    Snackbar.Add("Class successfully created!", Severity.Success);
-
-    // Reset everything to initial state
-    formModel = new CreateClassDto();
-    touchedFields.Clear();
-
-    // Clear MudForm's internal state (errors, touched flags, validation flags, etc.)
-    form.ResetValidation(); 
-
-    NavigationManager.NavigateTo("/");
+        formModel = new CreateClassDto();
+        touchedFields.Clear();
+        form.ResetValidation();
+        NavigationManager.NavigateTo("/");
     }
 }

@@ -13,6 +13,8 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public required string Presenter { get; set; }
         public ClassStatus Status { get; set; }
         public List<Registration> Registrations { get; set; } = new();
+        public Guid CreatedByUserId { get; set; }
+        public User CreatedByUser { get; set; }
     }
 
 }

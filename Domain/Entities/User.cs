@@ -12,5 +12,6 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public string Name { get; set; }
         public Role Role { get; set; } = Role.User;
         public List<Registration> Registrations { get; set; } = new();
+        public List<Class> ClassesCreated { get; set; } = new();
     }
 }

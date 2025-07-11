@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClassRegistrationApplication2025.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250709100745_AddRegistrations")]
-    partial class AddRegistrations
+    [Migration("20250711065825_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,9 @@ namespace ClassRegistrationApplication2025.Migrations
                     b.Property<string>("ClassName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -56,6 +59,8 @@ namespace ClassRegistrationApplication2025.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.ToTable("Classes");
                 });
 
@@ -75,7 +80,6 @@ namespace ClassRegistrationApplication2025.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -94,22 +98,32 @@ namespace ClassRegistrationApplication2025.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
 
                     b.Property<string>("UserID")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserID")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[UserID] IS NOT NULL");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.Class", b =>
+                {
+                    b.HasOne("ClassRegistrationApplication2025.Domain.Entities.User", "CreatedByUser")
+                        .WithMany("ClassesCreated")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
                 });
 
             modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.Registration", b =>
@@ -138,6 +152,8 @@ namespace ClassRegistrationApplication2025.Migrations
 
             modelBuilder.Entity("ClassRegistrationApplication2025.Domain.Entities.User", b =>
                 {
+                    b.Navigation("ClassesCreated");
+
                     b.Navigation("Registrations");
                 });
 #pragma warning restore 612, 618
