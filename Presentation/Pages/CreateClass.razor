@@ -40,9 +40,9 @@
                 <MudTextField T="string"
                               @bind-Value="formModel.PresenterName"
                               For="@(() => formModel.PresenterName)"
-                              Label="Presenter Name"
+                              Label="Facilitator Name"
                               Required="true"
-                              RequiredError="Presenter Name is required"
+                              RequiredError="Facilitator Name is required"
                               OnBlur="@(() => SetTouched(nameof(formModel.PresenterName)))"
                               Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.PresenterName))))" />
 
