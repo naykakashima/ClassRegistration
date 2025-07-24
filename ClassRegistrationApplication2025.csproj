@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Application\Services\**" />
+    <Content Remove="Application\Services\**" />
+    <EmbeddedResource Remove="Application\Services\**" />
+    <None Remove="Application\Services\**" />
+  </ItemGroup>
+
 
 	<ItemGroup>
 		<PackageReference Include="FluentValidation" Version="12.0.0" />
@@ -32,7 +39,6 @@
 
 
   <ItemGroup>
-    <Folder Include="Application\Services\" />
     <Folder Include="Application\Validation\" />
     <Folder Include="Domain\ValueObjects\" />
     <Folder Include="Infrastructure\ExternalServices\" />
