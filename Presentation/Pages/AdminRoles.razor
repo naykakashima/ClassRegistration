@@ -1,7 +1,11 @@
 ﻿@page "/admin/roles"
+@attribute [Authorize(Roles = "SuperAdmin")]
+
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Domain.Enums
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
@@ -14,42 +18,45 @@
 
 <PageTitle>Admin Panel - Role Management</PageTitle>
 
-<MudPaper Class="pa-4">
-    <div class="d-flex align-center justify-space-between mb-2">
-        <MudText Typo="Typo.h5">User Role Management</MudText>
+<AuthorizeRoute RequiredRole="@Role.SuperAdmin">
+    <MudPaper Class="pa-4">
+        <div class="d-flex align-center justify-space-between mb-2">
+            <MudText Typo="Typo.h5">User Role Management</MudText>
 
-        <MudButton Disabled="@_isLoading" Color="Color.Primary" Variant="Variant.Filled" OnClick="ReloadUsers" StartIcon="@Icons.Material.Filled.Refresh">
-            Refresh Users
-            @if (_isLoading)
-            {
-                <MudProgressCircular Size="Size.Medium" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
-            }
-        </MudButton>
-    </div>
+            <MudButton Disabled="@_isLoading" Color="Color.Primary" Variant="Variant.Filled" OnClick="ReloadUsers" StartIcon="@Icons.Material.Filled.Refresh">
+                Refresh Users
+                @if (_isLoading)
+                {
+                    <MudProgressCircular Size="Size.Medium" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
+                }
+            </MudButton>
+        </div>
 
-    <MudTable Items="@_users" Hover="true">
-        <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>UserID</MudTh>
-            <MudTh>Role</MudTh>
-            <MudTh>Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd>@context.Name</MudTd>
-            <MudTd>@context.UserID</MudTd>
-            <MudTd>@context.Role.ToString()</MudTd>
-            <MudTd>
-                <MudSelect @bind-Value="@_editRoles[context.Id]" Dense="true" Class="mr-2">
-                    @foreach (var role in Enum.GetValues<Role>())
-                    {
-                        <MudSelectItem Value="@role">@role</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudButton Variant="Variant.Text" Size="@Size.Small" OnClick="() => UpdateRole(context.Id)" Color="Color.Primary">Update</MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-</MudPaper>
+        <MudTable Items="@_users" Hover="true">
+            <HeaderContent>
+                <MudTh>Name</MudTh>
+                <MudTh>UserID</MudTh>
+                <MudTh>Role</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.UserID</MudTd>
+                <MudTd>@context.Role.ToString()</MudTd>
+                <MudTd>
+                    <MudSelect @bind-Value="@_editRoles[context.Id]" Dense="true" Class="mr-2">
+                        @foreach (var role in Enum.GetValues<Role>())
+                        {
+                            <MudSelectItem Value="@role">@role</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Text" Size="@Size.Small" OnClick="() => UpdateRole(context.Id)" Color="Color.Primary">Update</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</AuthorizeRoute>
+
 
 @code {
     private List<UserDto> _users = new();

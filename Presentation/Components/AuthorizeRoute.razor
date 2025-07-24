@@ -1,0 +1,63 @@
+﻿@* Shared/AuthorizeRoute.razor *@
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using ClassRegistrationApplication2025.Domain.Enums
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IUserService UserService
+
+@if (_authorized)
+{
+    @ChildContent
+}
+else if (_currentUser != null)
+{
+    <MudText>Checking permissions...</MudText>
+}
+
+@code {
+    [Parameter] public Role RequiredRole { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private UserDto? _currentUser;
+    private bool _authorized = false;
+    private bool _initialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var adUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+            if (!string.IsNullOrEmpty(adUserId))
+            {
+                _currentUser = await UserService.GetOrCreateCurrentUserAsync(adUserId);
+                _authorized = _currentUser?.Role >= RequiredRole;
+
+                if (!_authorized)
+                {
+                    Snackbar.Add($"Requires {RequiredRole} role. Your role: {_currentUser?.Role}",
+                                MudBlazor.Severity.Error);
+                    Navigation.NavigateTo("/");
+                }
+            }
+            else
+            {
+                Navigation.NavigateTo("/");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Authorization error: {ex.Message}", MudBlazor.Severity.Error);
+            Navigation.NavigateTo("/");
+        }
+        finally
+        {
+            _initialized = true;
+            StateHasChanged();
+        }
+    }
+}
