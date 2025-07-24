@@ -1,61 +1,131 @@
 ﻿@page "/"
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 @using Microsoft.AspNetCore.Components.Web
-@using MudBlazor;
+@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Presentation.Components
 
-<PageTitle>Home</PageTitle>
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject IUserService UserService
 
-<MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
-<MudText Class="mb-8">Welcome to your new app, powered by MudBlazor and the .NET 9 Template!</MudText>
+<PageTitle>Class Registration System</PageTitle>
 
-<MudAlert Severity="Severity.Normal" ContentAlignment="HorizontalAlignment.Start">
-    You can find documentation and examples on our website here:
-    <MudLink Href="https://mudblazor.com" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        <b>www.mudblazor.com</b>
-    </MudLink>
-</MudAlert>
+<CascadingAuthenticationState>
+    <MudContainer>
+        @if (currentUser == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            
+            @if (!string.IsNullOrEmpty(currentUser.Name))
+            {
+                <MudText Typo="Typo.h6" Class="mb-8 pa-2">Hello, @currentUser.Name!</MudText>
+            }
 
-<br />
-<MudText Typo="Typo.h5" GutterBottom="true">Interactivity in this Template</MudText>
-<br />
-<MudText Typo="Typo.body2">
-    When you opt for the "Global" Interactivity Location, <br />
-    the render modes are defined in App.razor and consequently apply to all child components.<br />
-    In this case, providers are globally set in the MainLayout.<br />
-    <br />
-    On the other hand, if you choose the "Per page/component" Interactivity Location,<br />
-    it is necessary to include the <br />
-    <br />
-    &lt;MudPopoverProvider /&gt; <br />
-    &lt;MudDialogProvider /&gt; <br />
-    &lt;MudSnackbarProvider /&gt; <br />
-    <br />
-    components on every interactive page.<br />
-    <br />
-    If a render mode is not specified for a page, it defaults to Server-Side Rendering (SSR),<br />
-    similar to this page. While MudBlazor allows pages to be rendered in SSR,<br />
-    please note that interactive features, such as buttons and dropdown menus, will not be functional.
-</MudText>
+            <MudGrid Class="d-flex justify-center">
+                <!-- Main action cards -->
+                <MudItem xs="12" md="4" Class="pa-2">
+                    <MudCard Elevation="8" Class="h-100 d-flex justify-center">
+                        <MudCardHeader  Class="d-flex justify-center">
+                            <MudText Align="Align.Center" Typo="Typo.h6">Browse Classes</MudText>
+                        </MudCardHeader>
+                        <MudCardContent Class="d-flex justify-center">
+                            <MudText Align="Align.Center">View all available classes and register for upcoming sessions.</MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-center">
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary" 
+                            >
+                               <CompactNavLink Href="/classes">View Classes</CompactNavLink>
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
 
-<br />
-<MudText Typo="Typo.h5" GutterBottom="true">What's New in Blazor with the Release of .NET 9</MudText>
-<br />
+                <!-- Class Manager section (visible only to managers) -->
+                @if (currentUser.Role >= Role.ClassManager)
+                {
+                    <MudItem xs="12" md="4" Class="pa-2">
+                        <MudCard Elevation="8" Class="h-100 d-flex justify-center">
+                            <MudCardHeader Class="d-flex justify-center">
+                                <MudText Align="Align.Center" Typo="Typo.h6">Class Management</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="d-flex justify-center">
+                                <MudText Align="Align.Center">Create and manage training classes and sessions.</MudText>
+                            </MudCardContent>
+                            <MudCardActions Class="d-flex justify-center">
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Secondary" 
+                                          >
+                                    <CompactNavLink Href="/create-class">Create Classes</CompactNavLink>
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
 
-<MudText Typo="Typo.h6" GutterBottom="true">Prerendering</MudText>
-<MudText Typo="Typo.body2" GutterBottom="true">
-    If you're exploring the features of .NET 9 Blazor,<br /> you might be pleasantly surprised to learn that each page is prerendered on the server,<br /> regardless of the selected render mode.<br /><br />
-    This means that you'll need to inject all necessary services on the server,<br /> even when opting for the wasm (WebAssembly) render mode.<br /><br />
-    This prerendering functionality is crucial to ensuring that WebAssembly mode feels fast and responsive,<br /> especially when it comes to initial page load times.<br /><br />
-    For more information on how to detect prerendering and leverage the RenderContext, you can refer to the following link:
-    <MudLink Href="https://github.com/dotnet/aspnetcore/issues/51468#issuecomment-1783568121" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        More details
-    </MudLink>
-</MudText>
+                <!-- Admin section (visible only to super admins) -->
+                @if (currentUser.Role == Role.SuperAdmin)
+                {
+                    <MudItem xs="12" md="4" Class="pa-2">
+                        <MudCard Elevation="8" Class="h-100 d-flex justify-center">
+                            <MudCardHeader  Class="d-flex justify-center">
+                                <MudText Align="Align.Center" Typo="Typo.h6">Admin Portal</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="d-flex justify-center">
+                                <MudText Align="Align.Center">Manage user roles and system settings.</MudText>
+                            </MudCardContent>
+                            <MudCardActions Class="d-flex justify-center" >
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Error" 
+                                          >
+                                    <CompactNavLink Href="/admin/roles">Manage Roles</CompactNavLink>
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
 
-<br />
-<MudText Typo="Typo.h6" GutterBottom="true">InteractiveAuto</MudText>
-<MudText Typo="Typo.body2">
-    A discussion on how to achieve this can be found here:
-    <MudLink Href="https://github.com/dotnet/aspnetcore/issues/51468#issue-1950424116" Target="_blank" Typo="Typo.body2" Color="Color.Primary">
-        More details
-    </MudLink>
-</MudText>
+            <!-- Information section -->
+            <MudText Typo="Typo.h5" GutterBottom="true" Class="mt-8">System Information</MudText>
+            
+            <MudAlert Severity="Severity.Info" Class="mb-4">
+                <MudText>This system allows you to:</MudText>
+                <MudList T="string">
+                    <MudListItem>Browse and register for available classes</MudListItem>
+                    @if (currentUser.Role >= Role.ClassManager)
+                    {
+                        <MudListItem>Create and manage training classes</MudListItem>
+                    }
+                    @if (currentUser.Role == Role.SuperAdmin)
+                    {
+                        <MudListItem>Manage user roles and permissions</MudListItem>
+                    }
+                </MudList>
+            </MudAlert>
+
+        }
+    </MudContainer>
+</CascadingAuthenticationState>
+
+@code {
+    private UserDto currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
+        }
+    }
+}

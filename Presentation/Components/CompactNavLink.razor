@@ -1,0 +1,30 @@
+﻿@inherits MudNavLink
+
+<a href="@Href"
+   class="mud-nav-link @Class"
+   @attributes="UserAttributes"
+   style="@Style"
+   target="@Target"
+   >
+
+    @if (Icon != null)
+    {
+        <span class="mud-nav-link-icon">@Icon</span>
+    }
+    <span class="pl-0">@ChildContent</span>
+</a>
+
+<style>
+    .mud-nav-link-icon {
+        margin-right: 0 !important;
+    }
+
+    .pl-0 {
+        padding-left: 0 !important;
+    }
+
+    a.mud-nav-link {
+        text-decoration: none;
+        color: inherit;
+    }
+</style>

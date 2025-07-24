@@ -1,12 +1,39 @@
-﻿@using Microsoft.AspNetCore.Components.Routing
-@using MudBlazor; 
-
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using MudBlazor
+@inject AuthenticationStateProvider AuthProvider
+@inject IUserService UserService
 
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavLink Href="/create-class" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Class</MudNavLink>
-    <MudNavLink Href="/admin/roles" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AdminPanelSettings">Role Management</MudNavLink>
-    <MudNavLink Href="/classes" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Class"> View Classes</MudNavLink>
+
+    @if (currentUser?.Role >= Role.ClassManager)
+    {
+        <MudNavLink Href="/create-class" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Class</MudNavLink>
+    }
+
+    @if (currentUser?.Role == Role.SuperAdmin)
+    {
+        <MudNavLink Href="/admin/roles" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AdminPanelSettings">Role Management</MudNavLink>
+    }
+
+    <MudNavLink Href="/classes" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Class">View Classes</MudNavLink>
 </MudNavMenu>
 
+@code {
+    private UserDto currentUser;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        if (!string.IsNullOrEmpty(userId))
+        {
+            currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
+        }
+    }
+}
