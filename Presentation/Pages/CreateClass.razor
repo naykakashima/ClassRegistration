@@ -16,72 +16,85 @@
 @inject IUserService UserService
 @inject IHttpContextAccessor _http
 
-<h3 classname="justify-center">Create Class</h3>
+<PageTitle> Create A Class </PageTitle>
 
-<MudGrid>
-    <MudItem xs="12" sm="7">
-        <MudPaper Class="pa-4">
-            <MudForm Model="@formModel"
-                     @ref="form"
-                     @bind-IsValid="@success"
-                     @bind-Errors="@errors" 
-                     Validator="validator.Validate">
+<MudPaper Class="pa-4">
+    <!-- Title section -->
+    <div class="d-flex align-center mb-4">
+        <MudText Typo="Typo.h5">Create A Class</MudText>
+    </div>
 
-                <MudTextField T="string"
-                              @bind-Value="formModel.ClassName"
-                              For="@(() => formModel.ClassName)"
-                              Label="Class Name"
-                              Required="true"
-                              RequiredError="Class Name is required"
-                              OnBlur="@(() => SetTouched(nameof(formModel.ClassName)))"
-                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.ClassName))))" />
+    <!-- Centered form section -->
+    <div class="d-flex justify-center">
+        <MudGrid>
+            <MudItem xl="8" sm="12">
+                <MudPaper Class="pa-4" Elevation="5">
+                    <MudForm Model="@formModel"
+                             @ref="form"
+                             @bind-IsValid="@success"
+                             @bind-Errors="@errors"
+                             Validator="validator.Validate">
 
+                        <MudTextField T="string"
+                                      @bind-Value="formModel.ClassName"
+                                      For="@(() => formModel.ClassName)"
+                                      Label="Class Name"
+                                      Required="true"
+                                      RequiredError="Class Name is required"
+                                      OnBlur="@(() => SetTouched(nameof(formModel.ClassName)))"
+                                      Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.ClassName))))" />
 
-                <MudTextField T="string"
-                              @bind-Value="formModel.PresenterName"
-                              For="@(() => formModel.PresenterName)"
-                              Label="Facilitator Name"
-                              Required="true"
-                              RequiredError="Facilitator Name is required"
-                              OnBlur="@(() => SetTouched(nameof(formModel.PresenterName)))"
-                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.PresenterName))))" />
+                        <MudTextField T="string"
+                                      @bind-Value="formModel.PresenterName"
+                                      For="@(() => formModel.PresenterName)"
+                                      Label="Facilitator Name"
+                                      Required="true"
+                                      RequiredError="Facilitator Name is required"
+                                      OnBlur="@(() => SetTouched(nameof(formModel.PresenterName)))"
+                                      Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.PresenterName))))" />
 
-                <MudDatePicker T="DateTime?"
-                              @bind-Date="formModel.Date"
-                              Label="Date"
-                              For="@(() => formModel.Date)" 
-                              Validation="@(validator.ValidateValue)" />
+                        <MudDatePicker T="DateTime?"
+                                       OverflowBehavior="OverflowBehavior.FlipNever"
+                                       PickerVariant="PickerVariant.Dialog"
+                                       @bind-Date="formModel.Date"
+                                       Label="Date" 
+                                       For="@(() => formModel.Date)"
+                                       Validation="@(validator.ValidateValue)" />
 
-                <MudTimePicker T="TimeSpan?"
-                              @bind-Time="formModel.StartTime"
-                              Label="Start Time"
-                              For="@(() => formModel.StartTime)"
-                              Validation="@(validator.ValidateValue)" />
+                        <MudTimePicker T="TimeSpan?"
+                                       PickerVariant="PickerVariant.Dialog"
+                                       @bind-Time="formModel.StartTime"
+                                       Label="Start Time"
+                                       For="@(() => formModel.StartTime)"
+                                       Validation="@(validator.ValidateValue)" />
 
-                <MudTimePicker T="TimeSpan?"
-                              @bind-Time="formModel.EndTime"
-                              Label="End Time"
-                              For="@(() => formModel.EndTime)"
-                              Validation="@(validator.ValidateValue)" />
+                        <MudTimePicker T="TimeSpan?"
+                                       PickerVariant="PickerVariant.Dialog"
+                                       @bind-Time="formModel.EndTime"
+                                       Label="End Time"
+                                       For="@(() => formModel.EndTime)"
+                                       Validation="@(validator.ValidateValue)" />
 
-                <MudNumericField T="int"
-                              @bind-Value="formModel.MaxSlots"
-                              Label="Max Slots"
-                              For="@(() => formModel.MaxSlots)"
-                              OnBlur="@(() => SetTouched(nameof(formModel.MaxSlots)))"
-                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.MaxSlots))))" />
+                        <MudNumericField T="int"
+                                         @bind-Value="formModel.MaxSlots"
+                                         Label="Max Slots"
+                                         For="@(() => formModel.MaxSlots)"
+                                         OnBlur="@(() => SetTouched(nameof(formModel.MaxSlots)))"
+                                         Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.MaxSlots))))" />
 
-                <MudButton OnClick="HandleValidSubmit" Disabled="@(!success)">Submit</MudButton>
+                        <MudButton OnClick="HandleValidSubmit" Disabled="@(!success)">Submit</MudButton>
 
-            </MudForm>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </div>
+</MudPaper>
 
 @code {
     bool success;
     string[] errors = { };
-    MudForm? form; 
+    MudForm? form;
     private CreateClassDto formModel = new();
     private CreateClassDtoFluentValidator validator = new();
     Dictionary<string, bool> touchedFields = new();
