@@ -42,5 +42,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             _db.Registrations.Add(registration);
             await _db.SaveChangesAsync(ct);
         }
+
+        public async Task<List<Guid>> GetClassIdsByUserAsync(Guid userId)
+        {
+            return await _db.Registrations
+                .Where(r => r.UserId == userId)
+                .Select(r => r.ClassId)
+                .ToListAsync();
+        }
     }
 }

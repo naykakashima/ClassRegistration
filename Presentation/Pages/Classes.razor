@@ -1,10 +1,16 @@
 ﻿@page "/classes"
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 @using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @inject GetAllClassesUseCase GetAllClassesUseCase
+@inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
+@inject IRegistrationRepository RegistrationRepository
+@inject IUserService UserService
 @inject ISnackbar Snackbar
 
 <Microsoft.AspNetCore.Components.Web.PageTitle> Classes </Microsoft.AspNetCore.Components.Web.PageTitle>
@@ -23,19 +29,30 @@
     }
     else
     {
-        <ClassesTable Classes="classes" OnRegister="Register" />
+        <ClassesTable Classes="classes" OnRegister="Register" RegisteredClassIds="_userRegisteredClassIds" />
     }
 </MudContainer>
 
 @code {
     private List<ClassSummaryDto> classes = new();
     private bool isLoading = true;
+    private HashSet<Guid> _userRegisteredClassIds = new();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             classes = await GetAllClassesUseCase.ExecuteAsync();
+
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userIdString = authState.User.Identity?.Name?.Split('\\').Last();
+            if (!string.IsNullOrEmpty(userIdString))
+            {
+                var userDto = await UserService.GetOrCreateCurrentUserAsync(userIdString);
+                var ids = await RegistrationRepository.GetClassIdsByUserAsync(userDto.Id);
+                _userRegisteredClassIds = ids.ToHashSet();
+            }
+
         }
         catch (Exception ex)
         {

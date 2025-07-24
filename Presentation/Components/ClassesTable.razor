@@ -1,16 +1,44 @@
 ﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 
-<MudTable Items="Classes" Hover="true" Bordered="true" Striped="true" Dense="true">
+@inject RegisterForClassUseCase RegisterUseCase
+@inject AuthenticationStateProvider AuthProvider
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+
+<MudTable Items="Classes" Hover="true" Bordered="true" Dense="true" SortLabel="Sort By">
     <HeaderContent>
-        <MudTh>Class Name</MudTh>
-        <MudTh>Facilitator</MudTh>
-        <MudTh>Date</MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.ClassName))" InitialDirection="SortDirection.Ascending">
+                Class Name
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Presenter))" InitialDirection="SortDirection.Ascending">
+                Facilitator
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Date))" InitialDirection="SortDirection.Ascending">
+                Date
+            </MudTableSortLabel>
+        </MudTh>
         <MudTh>Time</MudTh>
         <MudTh>Slots</MudTh>
-        <MudTh>Status</MudTh>   
-        <MudTh>Action</MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Status))" InitialDirection="SortDirection.Ascending">
+                Status
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="@(new Func<ClassSummaryDto, object>(x => RegisteredClassIds.Contains(x.Id)))">
+                Register
+            </MudTableSortLabel>
+        </MudTh>
     </HeaderContent>
     
     <RowTemplate>
@@ -35,12 +63,25 @@
         <MudTd DataLabel="Action">
             @if (context.Status == ClassStatus.Open && context.RegisteredCount < context.MaxSlots)
             {
-                <MudButton Variant="Variant.Filled"
-                          Color="Color.Primary"
-                          Size="Size.Small"
-                          OnClick="@(() => OnRegister.InvokeAsync(context.Id))">
-                    Register
-                </MudButton>
+                @if (RegisteredClassIds.Contains(context.Id))
+                {
+                    <MudButton Disabled="true" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small">
+                        Registered
+                    </MudButton>
+                }
+                else if (context.Status == ClassStatus.Open && context.RegisteredCount < context.MaxSlots)
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="@(() => OnRegister.InvokeAsync(context.Id))">
+                        Register
+                    </MudButton>
+                }
+                else
+                {
+                    <MudText Class="grey-text">Unavailable</MudText>
+                }
             }
             else
             {
@@ -56,6 +97,12 @@
 
     [Parameter]
     public EventCallback<Guid> OnRegister { get; set; }
+
+    [Parameter]
+    public HashSet<Guid> RegisteredClassIds { get; set; } = new();
+
+    private string? _currentUserId;
+    private UserDto? _currentUser;
 
     private Color GetStatusColor(ClassStatus status)
     {
@@ -77,7 +124,7 @@
     {
         if (classItem.Status != ClassStatus.Open)
             return Color.Default;
-        
+
         var percentage = GetProgressPercentage(classItem);
         return percentage switch
         {
