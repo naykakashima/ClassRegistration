@@ -7,6 +7,9 @@
 @using ClassRegistrationApplication2025.Presentation.Components
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Routing
+
 @inject GetAllClassesUseCase GetAllClassesUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
@@ -16,28 +19,59 @@
 
 <Microsoft.AspNetCore.Components.Web.PageTitle> Classes </Microsoft.AspNetCore.Components.Web.PageTitle>
 
-<MudContainer>
-    <MudText Typo="Typo.h5" Class="mb-4">Available Classes</MudText>
-    
-    @if (isLoading)
-    {
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
-        <MudText>Loading classes...</MudText>
-    }
-    else if (classes == null || !classes.Any())
-    {
-        <MudAlert Severity="Severity.Info">No classes found.</MudAlert>
-    }
-    else
-    {
-        <ClassesTable Classes="classes" OnRegister="Register" RegisteredClassIds="_userRegisteredClassIds" />
-    }
-</MudContainer>
+<CascadingAuthenticationState>
+    <MudContainer>
+
+        @if (currentUser == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            @if (currentUser.Role >= Role.ClassManager)
+            {
+                <MudStack Class="py-6 d-flex justify-space-between" Row="true">
+                    <MudText Typo="Typo.h6" >Available Classes</MudText>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Edit"
+                               Size="Size.Small"
+                               OnClick="@(() => NavigationManager.NavigateTo("/editclasslist"))">
+                        Manage Classes
+                    </MudButton>
+                </MudStack>
+            }
+            else
+            {
+                <MudText Typo="Typo.h5" Class="mb-4">Available Classes</MudText>
+            }
+
+
+            @if (isLoading)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                <MudText>Loading classes...</MudText>
+            }
+            else if (classes == null || !classes.Any())
+            {
+                <MudAlert Severity="Severity.Info">No classes found.</MudAlert>
+            }
+            else
+            {
+                <ClassesTable Classes="classes" OnRegister="Register" RegisteredClassIds="_userRegisteredClassIds" />
+            }
+            
+        }
+    </MudContainer>
+
+
+</CascadingAuthenticationState>
 
 @code {
     private List<ClassSummaryDto> classes = new();
     private bool isLoading = true;
     private HashSet<Guid> _userRegisteredClassIds = new();
+    private UserDto currentUser;
 
     protected override async Task OnInitializedAsync()
     {
@@ -57,11 +91,13 @@
 
             var authState = await AuthProvider.GetAuthenticationStateAsync();
             var userIdString = authState.User.Identity?.Name?.Split('\\').Last();
+            var userId = authState.User.Identity?.Name?.Split('\\').Last();
             if (!string.IsNullOrEmpty(userIdString))
             {
                 var userDto = await UserService.GetOrCreateCurrentUserAsync(userIdString);
                 var ids = await RegistrationRepository.GetClassIdsByUserAsync(userDto.Id);
                 _userRegisteredClassIds = ids.ToHashSet();
+                currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
             }
 
         }

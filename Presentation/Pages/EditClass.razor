@@ -9,6 +9,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject DeleteClassUseCase DeleteClassUseCase
 @inject UpdateClassUseCase UpdateUseCase
 @inject NavigationManager NavigationManager
 @inject ISnackbar Snackbar
@@ -92,6 +93,10 @@
 
                 <MudButton OnClick="HandleValidSubmit" Disabled="!success || IsLoading">Update Class</MudButton>
             </MudForm>
+            
+            <MudStack>
+                <MudButton Color="Color.Error" OnClick="DeleteClassOnClick">Delete Class</MudButton>
+            </MudStack>
         }
     </MudPaper>
 
@@ -174,6 +179,23 @@
         catch (Exception ex)
         {
             Snackbar.Add("Update failed: " + ex.Message, Severity.Error);
+        }
+    }
+    private async Task DeleteClassOnClick()
+    {
+        try
+        {
+            await DeleteClassUseCase.ExecuteAsync(ClassId, formModel);
+            Snackbar.Add("Class succesfully deleted!", Severity.Success);
+            NavigationManager.NavigateTo("/editclasslist");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Deletion failed: " + ex.Message, Severity.Error);
         }
     }
 }

@@ -35,6 +35,7 @@ builder.Services.AddScoped<GetAllClassesUseCase>();
 builder.Services.AddScoped<GetClassDetailsUseCase>();
 builder.Services.AddScoped<RegisterForClassUseCase>();
 builder.Services.AddScoped<UpdateClassUseCase>();
+builder.Services.AddScoped<DeleteClassUseCase>();
 
 builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));
 

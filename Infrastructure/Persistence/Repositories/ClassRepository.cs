@@ -2,6 +2,7 @@
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 {
@@ -40,6 +41,16 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Classes
                 .Include(c => c.Registrations)
                 .FirstOrDefaultAsync(c => c.Id == classId, ct);
+        }
+
+        public async Task DeleteClassAsync(Guid classId, AppDbContext context, CancellationToken ct)
+        {
+            var classToDelete = await context.Classes.FindAsync(classId);
+            if (classToDelete != null)
+            {
+                context.Classes.Remove(classToDelete);
+                await context.SaveChangesAsync(ct);
+            }
         }
 
     }
