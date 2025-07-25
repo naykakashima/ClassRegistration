@@ -9,6 +9,7 @@ namespace ClassRegistrationApplication2025.Application.DTOs
         {
             public string ClassName { get; set; }
             public string PresenterName { get; set; }
+            public string SessionName { get; set; }
             public DateTime? Date { get; set; }
             public TimeSpan? StartTime { get; set; }
             public TimeSpan? EndTime { get; set; }

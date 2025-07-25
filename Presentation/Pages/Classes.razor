@@ -1,6 +1,7 @@
 ﻿@page "/classes"
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Domain.Enums
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 @using ClassRegistrationApplication2025.Presentation.Components
@@ -43,6 +44,16 @@
         try
         {
             classes = await GetAllClassesUseCase.ExecuteAsync();
+
+            foreach (var classItem in classes)
+            {
+                var endDateTime = classItem.Date.Date + classItem.EndTime;
+
+                if (endDateTime < DateTime.Now)
+                {
+                    classItem.Status = ClassStatus.Closed;
+                }
+            }
 
             var authState = await AuthProvider.GetAuthenticationStateAsync();
             var userIdString = authState.User.Identity?.Name?.Split('\\').Last();

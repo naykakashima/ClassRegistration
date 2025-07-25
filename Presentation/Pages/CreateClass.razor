@@ -50,6 +50,15 @@
                                           Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.ClassName))))" />
 
                             <MudTextField T="string"
+                                          @bind-Value="formModel.SessionName"
+                                          For="@(() => formModel.SessionName)"
+                                          Label="Session Name"
+                                          Required="true"
+                                          RequiredError="Session Name is required"
+                                          OnBlur="@(() => SetTouched(nameof(formModel.SessionName)))"
+                                          Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.SessionName))))" />
+
+                            <MudTextField T="string"
                                           @bind-Value="formModel.PresenterName"
                                           For="@(() => formModel.PresenterName)"
                                           Label="Facilitator Name"

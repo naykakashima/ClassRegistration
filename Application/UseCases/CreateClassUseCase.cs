@@ -39,6 +39,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             {
                 Id = Guid.NewGuid(),
                 ClassName = dto.ClassName,
+                SessionName = dto.SessionName,
                 Presenter = dto.PresenterName,
                 Date = dto.Date.Value,
                 StartTime = dto.StartTime.Value,

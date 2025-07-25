@@ -6,6 +6,7 @@ namespace ClassRegistrationApplication2025.Domain.Entities
     {
         public Guid Id { get; set; }
         public required string ClassName { get; set; }
+        public string SessionName { get; set; }
         public DateTime Date { get; set; }
         public TimeSpan StartTime { get; set; }
         public TimeSpan EndTime { get; set; }

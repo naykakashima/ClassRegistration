@@ -11,6 +11,9 @@ namespace ClassRegistrationApplication2025.Presentation.Pages.Validators
             RuleFor(x => x.ClassName)
                 .MaximumLength(100);
 
+            RuleFor(x => x.SessionName)
+                .MaximumLength(100);
+
             RuleFor(x => x.PresenterName)
                 .MaximumLength(100);
 
@@ -22,7 +25,10 @@ namespace ClassRegistrationApplication2025.Presentation.Pages.Validators
 
             RuleFor(x => x.StartTime)
                 .NotNull()
-                .WithMessage("Start time is required.");
+                .WithMessage("Start time is required.")
+                .LessThan(x => x.EndTime)
+                .When(x => x.EndTime.HasValue)
+                .WithMessage("Start time must be before end time.");
 
             RuleFor(x => x.EndTime)
                 .NotNull()

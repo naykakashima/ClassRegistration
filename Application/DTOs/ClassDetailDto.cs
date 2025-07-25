@@ -6,6 +6,7 @@ namespace ClassRegistrationApplication2025.Application.DTOs
     {
         public Guid Id { get; set; }
         public string ClassName { get; set; }
+        public string SessionName { get; set; }
         public string Presenter { get; set; }
         public DateTime Date { get; set; }
         public TimeSpan StartTime { get; set; }

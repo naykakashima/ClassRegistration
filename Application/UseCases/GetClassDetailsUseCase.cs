@@ -36,6 +36,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 {
                     Id = classEntity.Id,
                     ClassName = classEntity.ClassName,
+                    SessionName = classEntity.SessionName,
                     Presenter = classEntity.Presenter,
                     Date = classEntity.Date,
                     StartTime = classEntity.StartTime,

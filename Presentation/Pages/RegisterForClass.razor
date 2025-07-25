@@ -18,7 +18,7 @@
 
 <CascadingAuthenticationState>
     <MudContainer>
-        <MudText Typo="Typo.h4" Class="mb-4">Register for Class</MudText>
+        <MudText Typo="Typo.h4" Class="mb-4 pa-2">Register for Class</MudText>
         
         @if (IsLoading)
         {
@@ -38,8 +38,9 @@
             <MudPaper Class="pa-4" Elevation="2">
                 <MudGrid>
                     <MudItem xs="12" md="6">
-                        <MudText Typo="Typo.subtitle1">Class Information</MudText>
+                        <MudText Typo="Typo.subtitle1">Class Information: </MudText>
                         <MudText>Class Name: @Class.ClassName</MudText>
+                        <MudText>Session Name: @Class.SessionName</MudText>
                         <MudText>Presenter: @Class.Presenter</MudText>
                         <MudText>Date: @Class.Date.ToShortDateString()</MudText>
                         <MudText>Time: @Class.StartTime.ToString(@"hh\:mm") - @Class.EndTime.ToString(@"hh\:mm")</MudText>

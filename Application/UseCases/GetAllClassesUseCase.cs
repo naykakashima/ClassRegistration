@@ -21,6 +21,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             {
                 Id = c.Id,
                 ClassName = c.ClassName,
+                SessionName = c.SessionName,
                 Presenter = c.Presenter,
                 Date = c.Date,
                 StartTime = c.StartTime,
