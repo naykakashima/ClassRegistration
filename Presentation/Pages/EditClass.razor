@@ -1,5 +1,179 @@
-﻿<h3>EditClass</h3>
+﻿@page "/editclasslist/{ClassId:guid}"
+@attribute [Authorize(Roles = "ClassManager, SuperAdmin")]
+
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Presentation.Pages.Validators
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject UpdateClassUseCase UpdateUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IUserService UserService
+@inject AuthenticationStateProvider AuthProvider
+
+<CascadingAuthenticationState>
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h5" Class="mb-4">Edit Class</MudText>
+
+        @if (IsLoading)
+        {
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText>Loading class details...</MudText>
+        }
+        else if (ErrorMessage != null)
+        {
+            <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+        }
+        else
+        {
+            <MudForm Model="@formModel"
+                     @ref="form"
+                     @bind-IsValid="@success"
+                     Validator="validator.Validate">
+
+                <MudTextField T="string"
+                              @bind-Value="formModel.ClassName"
+                              For="@(() => formModel.ClassName)"
+                              Label="Class Name"
+                              Required="true"
+                              RequiredError="Class Name is required"
+                              OnBlur="@(() => SetTouched(nameof(formModel.ClassName)))"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.ClassName))))" />
+
+                <MudTextField T="string"
+                              @bind-Value="formModel.SessionName"
+                              For="@(() => formModel.SessionName)"
+                              Label="Session Name"
+                              Required="true"
+                              RequiredError="Session Name is required"
+                              OnBlur="@(() => SetTouched(nameof(formModel.SessionName)))"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.SessionName))))" />
+
+                <MudTextField T="string"
+                              @bind-Value="formModel.PresenterName"
+                              For="@(() => formModel.PresenterName)"
+                              Label="Facilitator Name"
+                              Required="true"
+                              RequiredError="Facilitator Name is required"
+                              OnBlur="@(() => SetTouched(nameof(formModel.PresenterName)))"
+                              Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.PresenterName))))" />
+
+                <MudDatePicker T="DateTime?"
+                               PickerVariant="PickerVariant.Dialog"
+                               @bind-Date="formModel.Date"
+                               Label="Date"
+                               For="@(() => formModel.Date)"
+                               Validation="@(validator.ValidateValue)" />
+
+                <MudTimePicker T="TimeSpan?"
+                               PickerVariant="PickerVariant.Dialog"
+                               @bind-Time="formModel.StartTime"
+                               Label="Start Time"
+                               For="@(() => formModel.StartTime)"
+                               Validation="@(validator.ValidateValue)" />
+
+                <MudTimePicker T="TimeSpan?"
+                               PickerVariant="PickerVariant.Dialog"
+                               @bind-Time="formModel.EndTime"
+                               Label="End Time"
+                               For="@(() => formModel.EndTime)"
+                               Validation="@(validator.ValidateValue)" />
+
+                <MudNumericField T="int"
+                                 @bind-Value="formModel.MaxSlots"
+                                 Label="Max Slots"
+                                 For="@(() => formModel.MaxSlots)"
+                                 OnBlur="@(() => SetTouched(nameof(formModel.MaxSlots)))"
+                                 Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.MaxSlots))))" />
+
+                <MudButton OnClick="HandleValidSubmit" Disabled="!success || IsLoading">Update Class</MudButton>
+            </MudForm>
+        }
+    </MudPaper>
+
+</CascadingAuthenticationState>
 
 @code {
+    [Parameter] public Guid ClassId { get; set; }
 
+    private CreateClassDto formModel = new();
+    private MudForm form;
+    private bool success;
+    private Dictionary<string, bool> touchedFields = new();
+    private CreateClassDtoFluentValidator validator = new();
+    private string? _currentUserId;
+    private UserDto? _currentUser;
+
+    private bool IsLoading = true;
+    private string ErrorMessage;
+
+    bool HasTouched(string fieldName) => touchedFields.TryGetValue(fieldName, out var touched) && touched;
+    void SetTouched(string fieldName) => touchedFields[fieldName] = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsLoading = true;
+        ErrorMessage = null;
+
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        if (!string.IsNullOrEmpty(_currentUserId))
+        {
+            _currentUser = await UserService.GetOrCreateCurrentUserAsync(_currentUserId); // <-- this now updates the field
+        }
+
+        var result = await GetClassDetailsUseCase.ExecuteAsync(ClassId);
+        if (result.IsSuccess && result.Value != null)
+        {
+            var classDetails = result.Value;
+            formModel = new CreateClassDto
+            {
+                ClassName = classDetails.ClassName,
+                SessionName = classDetails.SessionName,
+                PresenterName = classDetails.Presenter,
+                Date = classDetails.Date,
+                StartTime = classDetails.StartTime,
+                EndTime = classDetails.EndTime,
+                MaxSlots = classDetails.MaxSlots,
+                CreatedByUserId = classDetails.CreatedByUserId
+            };
+        }
+        else
+        {
+            ErrorMessage = result.ErrorMessage ?? "Failed to load class details.";
+            Snackbar.Add(ErrorMessage, Severity.Error);
+        }
+
+        IsLoading = false;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (form == null)
+            return;
+
+        await form.Validate();
+        if (!success)
+            return;
+
+        try
+        {
+            await UpdateUseCase.ExecuteAsync(ClassId, formModel);
+            Snackbar.Add("Class successfully updated!", Severity.Success);
+            NavigationManager.NavigateTo("/editclasslist");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Update failed: " + ex.Message, Severity.Error);
+        }
+    }
 }

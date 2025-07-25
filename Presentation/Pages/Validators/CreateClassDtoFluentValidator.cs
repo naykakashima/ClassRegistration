@@ -26,9 +26,9 @@ namespace ClassRegistrationApplication2025.Presentation.Pages.Validators
             RuleFor(x => x.StartTime)
                 .NotNull()
                 .WithMessage("Start time is required.")
-                .LessThan(x => x.EndTime)
+                .NotEqual(x => x.EndTime)
                 .When(x => x.EndTime.HasValue)
-                .WithMessage("Start time must be before end time.");
+                .WithMessage("Start time cannot be same as end time");
 
             RuleFor(x => x.EndTime)
                 .NotNull()
@@ -55,6 +55,7 @@ namespace ClassRegistrationApplication2025.Presentation.Pages.Validators
 
         public Func<object, string, Task<IEnumerable<string>>> ConditionalValidateValue(Func<string, bool> shouldValidate) => async (model, propertyName) =>
             {
+
                 if (!shouldValidate(propertyName))
                     return Array.Empty<string>();
 

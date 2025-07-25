@@ -1,0 +1,87 @@
+﻿@page "/editclasslist"
+@attribute [Authorize]
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+
+
+@inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject RegisterForClassUseCase RegisterUseCase
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager NavigationManager
+@inject GetAllClassesUseCase GetAllClassesUseCase
+@using static System.Net.WebRequestMethods
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject IHttpContextAccessor _http
+
+<PageTitle>Manage Classes</PageTitle>
+
+<AuthorizeRoute RequiredRole="@Role.ClassManager"> 
+    <MudContainer>
+        <MudText Typo="Typo.h5" Class="mb-4">Manage Classes</MudText>
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            <MudText>Loading classes...</MudText>
+        }
+        else if (classes == null || !classes.Any())
+        {
+            <MudAlert Severity="Severity.Info">No classes found.</MudAlert>
+        }
+        else
+        {
+            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" />
+        }
+    </MudContainer>
+</AuthorizeRoute>
+
+@code {
+    private List<ClassSummaryDto> classes = new();
+    private bool isLoading = true;
+    private string? _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+            classes = await GetAllClassesUseCase.ExecuteAsync();
+
+            foreach (var classItem in classes)
+            {
+                var endDateTime = classItem.Date.Date + classItem.EndTime;
+                if (endDateTime < DateTime.Now)
+                {
+                    classItem.Status = ClassStatus.Closed;
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load classes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToEdit(Guid classId)
+    {
+        InvokeAsync(() =>
+            NavigationManager.NavigateTo($"/editclasslist/{classId}")
+        );
+    }
+}

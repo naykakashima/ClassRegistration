@@ -1,11 +1,7 @@
 ﻿using ClassRegistrationApplication2025.Application.Common;
 using ClassRegistrationApplication2025.Application.DTOs;
-using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ClassRegistrationApplication2025.Application.UseCases
 {
@@ -43,7 +39,8 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                     EndTime = classEntity.EndTime,
                     MaxSlots = classEntity.MaxSlots,
                     Status = classEntity.Status,
-                    RegisteredCount = classEntity.Registrations.Count
+                    RegisteredCount = classEntity.Registrations.Count,
+                    CreatedByUserId = classEntity.CreatedByUserId
                 });
             }
             catch (Exception ex)

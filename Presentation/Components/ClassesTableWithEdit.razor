@@ -1,0 +1,112 @@
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+
+@inject RegisterForClassUseCase RegisterUseCase
+@inject AuthenticationStateProvider AuthProvider
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+
+<MudTable Items="Classes" Hover="true" Bordered="true" Dense="true" SortLabel="Sort By">
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.ClassName))" InitialDirection="SortDirection.Ascending">
+                Class Name
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Presenter))" InitialDirection="SortDirection.Ascending">
+                Facilitator
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Date))" InitialDirection="SortDirection.Ascending">
+                Date
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>Time</MudTh>
+        <MudTh>Slots</MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Status))" InitialDirection="SortDirection.Ascending">
+                Status
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>
+            Edit
+        </MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Class Name">@context.ClassName (@context.SessionName) </MudTd>
+        <MudTd DataLabel="Presenter">@context.Presenter</MudTd>
+        <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Time">
+            @context.StartTime.ToString(@"hh\:mm") - @context.EndTime.ToString(@"hh\:mm")
+        </MudTd>
+        <MudTd DataLabel="Slots">
+            <MudProgressLinear Linear="true"
+                               Value="@(GetProgressPercentage(context))"
+                               Color="@GetProgressColor(context)"
+                               Class="my-1" />
+            @context.RegisteredCount / @context.MaxSlots
+        </MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="ClassStatus" Color="@GetStatusColor(context.Status)" Variant="Variant.Filled">
+                @context.Status
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Action">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.Edit">
+                Edit
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter]
+    public List<ClassSummaryDto> Classes { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Guid> OnEdit { get; set; }
+
+    private string? _currentUserId;
+    private UserDto? _currentUser;
+
+    private Color GetStatusColor(ClassStatus status)
+    {
+        return status switch
+        {
+            ClassStatus.Open => Color.Success,
+            ClassStatus.Closed => Color.Error,
+            _ => Color.Default  // Handle any unexpected status
+        };
+    }
+
+    private double GetProgressPercentage(ClassSummaryDto classItem)
+    {
+        if (classItem.MaxSlots == 0) return 0;
+        return (classItem.RegisteredCount * 100.0) / classItem.MaxSlots;
+    }
+
+    private Color GetProgressColor(ClassSummaryDto classItem)
+    {
+        if (classItem.Status != ClassStatus.Open)
+            return Color.Default;
+
+        var percentage = GetProgressPercentage(classItem);
+        return percentage switch
+        {
+            >= 90 => Color.Error,
+            >= 75 => Color.Warning,
+            _ => Color.Success
+        };
+    }
+}
