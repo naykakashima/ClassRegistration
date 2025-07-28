@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ClassRegistrationApplication2025.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250711065825_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250728095006_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,6 +48,10 @@ namespace ClassRegistrationApplication2025.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Presenter")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SessionName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
