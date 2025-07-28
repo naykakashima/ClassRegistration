@@ -7,6 +7,7 @@
 
 @inject RegisterForClassUseCase RegisterUseCase
 @inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager NavManager
 @inject IUserService UserService
 @inject ISnackbar Snackbar
 
@@ -18,53 +19,54 @@
             </MudTableSortLabel>
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Presenter))" InitialDirection="SortDirection.Ascending">
-                Facilitator
-            </MudTableSortLabel>
+            Registered Users
         </MudTh>
         <MudTh>
-            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Date))" InitialDirection="SortDirection.Ascending">
-                Date
-            </MudTableSortLabel>
-        </MudTh>
-        <MudTh>Time</MudTh>
-        <MudTh>Slots</MudTh>
-        <MudTh>
-            <MudTableSortLabel SortBy="@(new Func<ClassSummaryDto, object>(x => x.Status))" InitialDirection="SortDirection.Ascending">
-                Status
-            </MudTableSortLabel>
+            Survey
         </MudTh>
         <MudTh>
-            Edit
+            Edit Class
+        </MudTh>
+        <MudTh>
+            Export CSV
         </MudTh>
     </HeaderContent>
 
     <RowTemplate>
         <MudTd DataLabel="Class Name">@context.ClassName (@context.SessionName) </MudTd>
-        <MudTd DataLabel="Presenter">@context.Presenter</MudTd>
-        <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
-        <MudTd DataLabel="Time">
-            @context.StartTime.ToString(@"hh\:mm") - @context.EndTime.ToString(@"hh\:mm")
-        </MudTd>
-        <MudTd DataLabel="Slots">
-            <MudProgressLinear Linear="true"
-                               Value="@(GetProgressPercentage(context))"
-                               Color="@GetProgressColor(context)"
-                               Class="my-1" />
-            @context.RegisteredCount / @context.MaxSlots
-        </MudTd>
-        <MudTd DataLabel="Status">
-            <MudChip T="ClassStatus" Color="@GetStatusColor(context.Status)" Variant="Variant.Filled">
-                @context.Status
-            </MudChip>
-        </MudTd>
-        <MudTd DataLabel="Action">
+        <MudTd DataLabel="Registered Users">
             <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.PersonSearch">
+                View Users
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Survey">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.Build">
+                Survey Builder
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Edit Class">
+            <MudButton Variant="Variant.Filled"
+                       Style="background-color: yellowgreen; color: white; d-flex justify-center align-center"
                        Size="Size.Small"
                        OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
                        EndIcon="@Icons.Material.Filled.Edit">
                 Edit
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Export CSV">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.Download">
+                Download CSV
             </MudButton>
         </MudTd>
     </RowTemplate>

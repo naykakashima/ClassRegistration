@@ -13,7 +13,7 @@
     @if (currentUser?.Role >= Role.ClassManager)
     {
         <MudNavLink Href="/create-class" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Class</MudNavLink>
-        <MudNavLink Href="/editclasslist" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Edit">Edit Classes</MudNavLink>
+        <MudNavLink Href="/editclasslist" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Edit"> Manage Classes</MudNavLink>
     }
 
     @if (currentUser?.Role == Role.SuperAdmin)
