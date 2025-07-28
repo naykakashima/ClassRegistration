@@ -101,7 +101,7 @@
     private async Task ShowRegisteredUsersModal(Guid classId)
     {
         var parameters = new DialogParameters { ["ClassId"] = classId };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
         await DialogService.ShowAsync<RegisteredUsersDialog>("Registered Users", parameters, options);
     }
     private void ExportCsv(Guid classId)
