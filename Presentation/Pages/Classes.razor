@@ -10,6 +10,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Routing
 
+@inject IDialogService DialogService
 @inject GetAllClassesUseCase GetAllClassesUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
@@ -79,7 +80,7 @@
             }
             else
             {
-                <ClassesTable Classes="classes" OnRegister="Register" RegisteredClassIds="_userRegisteredClassIds" />
+                <ClassesTable Classes="classes" OnRegister="Register" OnUnregister="HandleUnregister" RegisteredClassIds="_userRegisteredClassIds" />
             }
             
         }
@@ -139,6 +140,34 @@
 
 
     private void Register(Guid classId) => NavigationManager.NavigateTo($"/register/{classId}");
+
+    private async Task HandleUnregister(Guid classId)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<UnregisterDialog>("Confirm Unregister", options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+            return;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            await RegistrationRepository.UnregisterUserAsync(currentUser.Id, classId, cts.Token);
+
+            _userRegisteredClassIds.Remove(classId);
+            Snackbar.Add("Successfully unregistered.", Severity.Success);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to unregister: {ex.Message}", Severity.Error);
+        }
+    }
+
+
 }
 
 

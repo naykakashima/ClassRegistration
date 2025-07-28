@@ -65,8 +65,8 @@
             {
                 @if (RegisteredClassIds.Contains(context.Id))
                 {
-                    <MudButton Disabled="true" Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small">
-                        Registered
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => OnUnregister.InvokeAsync(context.Id))">
+                        Unregister
                     </MudButton>
                 }
                 else if (context.Status == ClassStatus.Open && context.RegisteredCount < context.MaxSlots)
@@ -100,6 +100,9 @@
 
     [Parameter]
     public HashSet<Guid> RegisteredClassIds { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Guid> OnUnregister { get; set; }
 
     private string? _currentUserId;
     private UserDto? _currentUser;

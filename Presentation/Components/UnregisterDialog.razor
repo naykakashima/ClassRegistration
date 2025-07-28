@@ -1,0 +1,23 @@
+﻿<MudDialog>
+    <TitleContent>
+        Confirm Unregister
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">
+            Are you sure you want to unregister from this class?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Default" OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="ConfirmUnregister">Unregister</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private void ConfirmUnregister() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+}

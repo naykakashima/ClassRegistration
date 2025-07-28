@@ -1,5 +1,4 @@
-﻿// RegistrationRepository.cs
-using ClassRegistrationApplication2025.Domain.Entities;
+﻿using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +39,18 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             };
 
             _db.Registrations.Add(registration);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        public async Task UnregisterUserAsync(Guid userId, Guid classId, CancellationToken ct)
+        {
+            var registration = await _db.Registrations
+                .FirstOrDefaultAsync(r => r.UserId == userId && r.ClassId == classId, ct);
+
+            if (registration == null)
+                return; // Or throw an exception depending on your business logic
+
+            _db.Registrations.Remove(registration);
             await _db.SaveChangesAsync(ct);
         }
 
