@@ -5,6 +5,8 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 
+@inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject MudBlazor.IDialogService DialogService
 @inject RegisterForClassUseCase RegisterUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject IUserService UserService
@@ -42,7 +44,16 @@
     </HeaderContent>
     
     <RowTemplate>
-        <MudTd DataLabel="Class Name">@context.ClassName (@context.SessionName) </MudTd>
+        <MudTd DataLabel="Class Name">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span>@context.ClassName (@context.SessionName)</span>
+                <MudIconButton Icon="@Icons.Material.Filled.Info"
+                               Color="Color.Info"
+                               Size="Size.Small"
+                               OnClick="@(() => ShowDetails(context))"
+                               />
+            </div>
+        </MudTd>
         <MudTd DataLabel="Presenter">@context.Presenter</MudTd>
         <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
         <MudTd DataLabel="Time">
@@ -141,4 +152,38 @@
             _ => Color.Success
         };
     }
+
+    private async Task ShowDetails(ClassSummaryDto classItem)
+    {
+        try
+        {
+            var result = await GetClassDetailsUseCase.ExecuteAsync(classItem.Id);
+
+            if (result.IsSuccess && result.Value != null)
+            {
+                var parameters = new DialogParameters
+            {
+                { "Class", result.Value } // Full details
+            };
+
+                var options = new DialogOptions
+                {
+                    CloseOnEscapeKey = true,
+                    MaxWidth = MaxWidth.Small,
+                    FullWidth = true
+                };
+
+                DialogService.Show<ClassDetailsModal>("Class Details", parameters, options);
+            }
+            else
+            {
+                Snackbar.Add("Failed to load class details.", MudBlazor.Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading details: {ex.Message}", MudBlazor.Severity.Error);
+        }
+    }
+
 }

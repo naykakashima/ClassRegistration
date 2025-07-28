@@ -1,0 +1,26 @@
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@inject MudBlazor.IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudDivider Class="my-2" />
+
+        <MudText><b>Class Name:</b> @Class.ClassName</MudText>
+        <MudText><b>Session:</b> @Class.SessionName</MudText>
+        <MudText><b>Presenter:</b> @Class.Presenter</MudText>
+        <MudText><b>Date:</b> @Class.Date.ToShortDateString()</MudText>
+        <MudText><b>Time:</b> @Class.StartTime.ToString(@"hh\:mm") - @Class.EndTime.ToString(@"hh\:mm")</MudText>
+        <MudText><b>Slots:</b> @Class.RegisteredCount / @Class.MaxSlots</MudText>
+        <MudText><b>Status:</b> @Class.Status</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@CloseDialog" Color="Color.Primary" Variant="Variant.Text">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public ClassDetailDto Class { get; set; }
+
+    void CloseDialog() => MudDialog.Close();
+}
