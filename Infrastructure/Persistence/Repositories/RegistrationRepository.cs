@@ -65,6 +65,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
         public async Task<List<Registration>> GetRegistrationsByClassAsync(Guid classId)
         {
             return await _db.Registrations
+                            .Include(r => r.User)
                             .Where(r => r.ClassId == classId)
                             .ToListAsync();
         }

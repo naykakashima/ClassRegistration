@@ -47,7 +47,7 @@
         }
         else
         {
-            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurvey="NavigateToSurvey" OnViewUsers="ShowRegisteredUsersModal" OnDownloadCsv="ExportCsv" />
+            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurvey="NavigateToSurvey" OnViewUsers="ShowRegisteredUsersModal" OnDownloadExcel="ExportExcel" />
         }
     </MudContainer>
 </CascadingAuthenticationState>
@@ -111,54 +111,77 @@
         await DialogService.ShowAsync<RegisteredUsersDialog>("Registered Users", parameters, options);
     }
     
-    private Task ExportCsv(Guid classId)
+    private Task ExportExcel(Guid classId)
     {
         return InvokeAsync(async () =>
         {
             try
             {
                 var result = await GetClassDetailsUseCase.ExecuteAsync(classId);
-
                 if (!result.IsSuccess || result.Value == null)
                 {
                     Snackbar.Add("Class not found.", Severity.Warning);
                     return;
                 }
 
-                var classDetail = result.Value; 
-
+                var classDetail = result.Value;
                 var users = await GetRegisteredUsersUseCase.ExecuteAsync(classId);
+
                 if (users == null || !users.Any())
                 {
                     Snackbar.Add("No registered users for this class.", Severity.Info);
                     return;
                 }
 
-                var sb = new StringBuilder();
-                sb.AppendLine("Class Name,Session Name,Presenter,Date,Start Time,End Time,User Name,Registered At");
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Registered Users");
 
-                foreach (var user in users)
+                // Header row
+                string[] headers = {
+                "Class Name", "Session Name", "Presenter", "Date", "Start Time", "End Time", "User ID", "User Name", "Registered At"
+                };
+
+                for (int i = 0; i < headers.Length; i++)
                 {
-                    sb.AppendLine($"{classDetail.ClassName}," +
-                                  $"{classDetail.SessionName}," +
-                                  $"{classDetail.Presenter}," +
-                                  $"{classDetail.Date:yyyy-MM-dd}," +
-                                  $"{classDetail.StartTime}," +
-                                  $"{classDetail.EndTime}," +
-                                  $"{user.UserName}," +
-                                  $"{user.RegisteredAt:yyyy-MM-dd HH:mm}");
+                    worksheet.Cell(1, i + 1).Value = headers[i];
+                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
                 }
 
-                var fileName = $"{classDetail.ClassName}_{classDetail.SessionName}.csv".Replace(" ", "_");
-                await JS.InvokeVoidAsync("downloadFile", fileName, sb.ToString());
+                // Fill data
+                int row = 2;
+                foreach (var user in users)
+                {
+                    worksheet.Cell(row, 1).Value = classDetail.ClassName;
+                    worksheet.Cell(row, 2).Value = classDetail.SessionName;
+                    worksheet.Cell(row, 3).Value = classDetail.Presenter;
+                    worksheet.Cell(row, 4).Value = classDetail.Date.ToString("yyyy-MM-dd");
+                    worksheet.Cell(row, 5).Value = classDetail.StartTime.ToString();
+                    worksheet.Cell(row, 6).Value = classDetail.EndTime.ToString();
+                    worksheet.Cell(row, 7).Value = user.UserID;
+                    worksheet.Cell(row, 8).Value = user.UserName;
+                    worksheet.Cell(row, 9).Value = user.RegisteredAt.ToString("yyyy-MM-dd HH:mm");
+                    row++;
+                }
 
-                Snackbar.Add($"Downloading CSV for {classDetail.ClassName}", Severity.Success);
+                worksheet.Columns().AdjustToContents(); // Auto-fit
+                worksheet.SheetView.FreezeRows(1); // Freeze header
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+                var content = Convert.ToBase64String(stream.ToArray());
+
+                var fileName = $"{classDetail.ClassName}_{classDetail.SessionName}.xlsx".Replace(" ", "_");
+
+                await JS.InvokeVoidAsync("downloadFile", fileName, content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+                Snackbar.Add($"Downloading Excel for {classDetail.ClassName}", Severity.Success);
             }
             catch (Exception ex)
             {
-                Snackbar.Add($"Failed to export CSV: {ex.Message}", Severity.Error);
+                Snackbar.Add($"Failed to export Excel: {ex.Message}", Severity.Error);
             }
         });
     }
+
 
 }

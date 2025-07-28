@@ -29,7 +29,7 @@
             Edit Class
         </MudTh>
         <MudTh>
-            Export CSV
+            Export Excel
         </MudTh>
     </HeaderContent>
 
@@ -61,7 +61,7 @@
                 Edit
             </MudButton>
         </MudTd>
-        <MudTd DataLabel="Export CSV">
+        <MudTd DataLabel="Export Excel">
             @if (context.RegisteredCount == 0)
             {
                 <MudTooltip Text="No registrations to export">
@@ -70,7 +70,7 @@
                                Size="Size.Small"
                                Disabled="true"
                                EndIcon="@Icons.Material.Filled.Download">
-                        Download CSV
+                        Download Excel
                     </MudButton>
                 </MudTooltip>
             }
@@ -79,9 +79,9 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            Size="Size.Small"
-                           OnClick="@(() => OnDownloadCsv.InvokeAsync(context.Id))"
+                           OnClick="@(() => OnDownloadExcel.InvokeAsync(context.Id))"
                            EndIcon="@Icons.Material.Filled.Download">
-                    Download CSV
+                    Download Excel
                 </MudButton>
             }
         </MudTd>
@@ -99,7 +99,7 @@
     [Parameter]
     public EventCallback<Guid> OnViewUsers { get; set; }
     [Parameter]
-    public EventCallback<Guid> OnDownloadCsv { get; set; }
+    public EventCallback<Guid> OnDownloadExcel { get; set; }
 
     private List<RegisteredUsersDto> Users;
 

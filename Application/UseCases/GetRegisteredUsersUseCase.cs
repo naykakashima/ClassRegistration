@@ -23,6 +23,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             return registrations.Select(r => new RegisteredUsersDto
             {
                 Id = r.Id,
+                UserID = r.User.UserID,
                 UserName = r.UserName,
                 RegisteredAt = r.RegisteredAt
             }).ToList();
