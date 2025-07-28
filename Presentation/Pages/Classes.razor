@@ -31,19 +31,40 @@
             @if (currentUser.Role >= Role.ClassManager)
             {
                 <MudStack Class="py-6 d-flex justify-space-between" Row="true">
-                    <MudText Typo="Typo.h6" >Available Classes</MudText>
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Edit"
-                               Size="Size.Small"
-                               OnClick="@(() => NavigationManager.NavigateTo("/editclasslist"))">
-                        Manage Classes
-                    </MudButton>
+                    <MudText Typo="Typo.h6">Available Classes</MudText>
+                    <MudStack Row="true">
+                        <MudButton Disabled="isLoading" Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadClasses" StartIcon="@Icons.Material.Filled.Refresh">
+                            Refresh
+                            @if (isLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
+                            }
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   OnClick="@(() => NavigationManager.NavigateTo("/editclasslist"))">
+                            Manage Classes
+                        </MudButton>
+                    </MudStack>
                 </MudStack>
             }
             else
             {
-                <MudText Typo="Typo.h5" Class="mb-4">Available Classes</MudText>
+                <MudStack Row="true" Class="py-6 d-flex justify-space-between">
+                    <MudText Typo="Typo.h5">Available Classes</MudText>
+
+                    <MudPaper>
+                        <MudButton Disabled="isLoading" Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadClasses" StartIcon="@Icons.Material.Filled.Refresh">
+                            Refresh
+                            @if (isLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
+                            }
+                        </MudButton>
+                    </MudPaper>
+                </MudStack>
             }
 
 
@@ -111,5 +132,14 @@
         }
     }
 
+    private async Task LoadClasses()
+    {
+        NavigationManager.NavigateTo("/classes", forceLoad: true);
+    }
+
+
     private void Register(Guid classId) => NavigationManager.NavigateTo($"/register/{classId}");
 }
+
+
+     

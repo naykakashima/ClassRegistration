@@ -104,6 +104,11 @@
     private string? _currentUserId;
     private UserDto? _currentUser;
 
+    protected override void OnParametersSet()
+    {
+        StateHasChanged(); 
+    }
+
     private Color GetStatusColor(ClassStatus status)
     {
         return status switch

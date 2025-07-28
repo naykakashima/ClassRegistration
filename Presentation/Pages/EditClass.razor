@@ -3,6 +3,7 @@
 
 @using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 @using ClassRegistrationApplication2025.Presentation.Pages.Validators
 @using Microsoft.AspNetCore.Authorization
@@ -85,11 +86,21 @@
                                Validation="@(validator.ValidateValue)" />
 
                 <MudNumericField T="int"
-                                 @bind-Value="formModel.MaxSlots"
-                                 Label="Max Slots"
-                                 For="@(() => formModel.MaxSlots)"
-                                 OnBlur="@(() => SetTouched(nameof(formModel.MaxSlots)))"
-                                 Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.MaxSlots))))" />
+                                @bind-Value="formModel.MaxSlots"
+                                Label="Max Slots"
+                                For="@(() => formModel.MaxSlots)"
+                                OnBlur="@(() => SetTouched(nameof(formModel.MaxSlots)))"
+                                Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.MaxSlots))))" />
+
+
+                <MudSelect T="ClassStatus"
+                               Label="Class Status"
+                               @bind-Value="formModel.Status"
+                               Required="true"
+                               For="@(() => formModel.Status)">
+                        <MudSelectItem Value="ClassStatus.Open">Open</MudSelectItem>
+                        <MudSelectItem Value="ClassStatus.Closed">Closed</MudSelectItem>
+                </MudSelect>
 
                 <MudButton OnClick="HandleValidSubmit" Disabled="!success || IsLoading">Update Class</MudButton>
             </MudForm>
@@ -119,6 +130,12 @@
     bool HasTouched(string fieldName) => touchedFields.TryGetValue(fieldName, out var touched) && touched;
     void SetTouched(string fieldName) => touchedFields[fieldName] = true;
 
+    private bool IsOpen
+    {
+        get => formModel.Status == ClassStatus.Open;
+        set => formModel.Status = value ? ClassStatus.Open : ClassStatus.Closed;
+    }
+
     protected override async Task OnInitializedAsync()
     {
         IsLoading = true;
@@ -145,6 +162,7 @@
                 StartTime = classDetails.StartTime,
                 EndTime = classDetails.EndTime,
                 MaxSlots = classDetails.MaxSlots,
+                Status = classDetails.Status,
                 CreatedByUserId = classDetails.CreatedByUserId
             };
         }
@@ -170,7 +188,7 @@
         {
             await UpdateUseCase.ExecuteAsync(ClassId, formModel);
             Snackbar.Add("Class successfully updated!", Severity.Success);
-            NavigationManager.NavigateTo("/editclasslist");
+            NavigationManager.NavigateTo("/classes");
         }
         catch (UnauthorizedAccessException ex)
         {

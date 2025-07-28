@@ -35,6 +35,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 classEntity.StartTime = dto.StartTime ?? classEntity.StartTime;
                 classEntity.EndTime = dto.EndTime ?? classEntity.EndTime;
                 classEntity.MaxSlots = dto.MaxSlots;
+                classEntity.Status = dto.Status;
 
                 // Save changes
                 await context.SaveChangesAsync(ct);

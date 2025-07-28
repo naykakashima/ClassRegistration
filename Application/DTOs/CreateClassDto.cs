@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using ClassRegistrationApplication2025.Domain.Entities;
+using ClassRegistrationApplication2025.Domain.Enums;
 
 namespace ClassRegistrationApplication2025.Application.DTOs
 
@@ -15,6 +16,7 @@ namespace ClassRegistrationApplication2025.Application.DTOs
             public TimeSpan? EndTime { get; set; }
             public int MaxSlots { get; set; }
             public Guid CreatedByUserId { get; set; }
+            public ClassStatus Status { get; set; }
             public User CreatedByUser { get; set; }
     }
 

@@ -1,5 +1,5 @@
 ﻿@page "/editclasslist"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "ClassManager, SuperAdmin")]
 
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
@@ -24,9 +24,11 @@
 
 <PageTitle>Manage Classes</PageTitle>
 
-<AuthorizeRoute RequiredRole="@Role.ClassManager"> 
+<CascadingAuthenticationState>
     <MudContainer>
-        <MudText Typo="Typo.h5" Class="mb-4">Manage Classes</MudText>
+        <MudStack Class="py-6 d-flex justify-space-between" Row="true">
+            <MudText Typo="Typo.h5" Class="mb-4">Manage Classes</MudText>
+        </MudStack>
 
         @if (isLoading)
         {
@@ -42,10 +44,11 @@
             <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" />
         }
     </MudContainer>
-</AuthorizeRoute>
+</CascadingAuthenticationState>
 
 @code {
     private List<ClassSummaryDto> classes = new();
+    private UserDto currentUser;
     private bool isLoading = true;
     private string? _currentUserId;
 
@@ -54,8 +57,10 @@
         try
         {
             var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.Identity?.Name?.Split('\\').Last();
             _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
 
+            currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
             classes = await GetAllClassesUseCase.ExecuteAsync();
 
             foreach (var classItem in classes)
