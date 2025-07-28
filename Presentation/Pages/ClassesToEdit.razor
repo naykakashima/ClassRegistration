@@ -9,10 +9,13 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 @using MudBlazor
+@using System.Text
 
 
 @inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
 @inject RegisterForClassUseCase RegisterUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
@@ -22,6 +25,8 @@
 @inject ISnackbar Snackbar
 @inject IHttpContextAccessor _http
 @inject IDialogService DialogService
+@inject IJSRuntime JS
+
 
 <PageTitle>Manage Classes</PageTitle>
 
@@ -52,6 +57,7 @@
     private UserDto currentUser;
     private bool isLoading = true;
     private string? _currentUserId;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,10 +110,55 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
         await DialogService.ShowAsync<RegisteredUsersDialog>("Registered Users", parameters, options);
     }
-    private void ExportCsv(Guid classId)
+    
+    private Task ExportCsv(Guid classId)
     {
-        InvokeAsync(() =>
-            Console.Write("test")
-        );
+        return InvokeAsync(async () =>
+        {
+            try
+            {
+                var result = await GetClassDetailsUseCase.ExecuteAsync(classId);
+
+                if (!result.IsSuccess || result.Value == null)
+                {
+                    Snackbar.Add("Class not found.", Severity.Warning);
+                    return;
+                }
+
+                var classDetail = result.Value; 
+
+                var users = await GetRegisteredUsersUseCase.ExecuteAsync(classId);
+                if (users == null || !users.Any())
+                {
+                    Snackbar.Add("No registered users for this class.", Severity.Info);
+                    return;
+                }
+
+                var sb = new StringBuilder();
+                sb.AppendLine("Class Name,Session Name,Presenter,Date,Start Time,End Time,User Name,Registered At");
+
+                foreach (var user in users)
+                {
+                    sb.AppendLine($"{classDetail.ClassName}," +
+                                  $"{classDetail.SessionName}," +
+                                  $"{classDetail.Presenter}," +
+                                  $"{classDetail.Date:yyyy-MM-dd}," +
+                                  $"{classDetail.StartTime}," +
+                                  $"{classDetail.EndTime}," +
+                                  $"{user.UserName}," +
+                                  $"{user.RegisteredAt:yyyy-MM-dd HH:mm}");
+                }
+
+                var fileName = $"{classDetail.ClassName}_{classDetail.SessionName}.csv".Replace(" ", "_");
+                await JS.InvokeVoidAsync("downloadFile", fileName, sb.ToString());
+
+                Snackbar.Add($"Downloading CSV for {classDetail.ClassName}", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Failed to export CSV: {ex.Message}", Severity.Error);
+            }
+        });
     }
+
 }

@@ -6,6 +6,7 @@
 @using MudBlazor
 
 @inject RegisterForClassUseCase RegisterUseCase
+@inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavManager
 @inject IUserService UserService
@@ -61,13 +62,28 @@
             </MudButton>
         </MudTd>
         <MudTd DataLabel="Export CSV">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       Size="Size.Small"
-                       OnClick="@(() => OnDownloadCsv.InvokeAsync(context.Id))"
-                       EndIcon="@Icons.Material.Filled.Download">
-                Download CSV
-            </MudButton>
+            @if (context.RegisteredCount == 0)
+            {
+                <MudTooltip Text="No registrations to export">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               Disabled="true"
+                               EndIcon="@Icons.Material.Filled.Download">
+                        Download CSV
+                    </MudButton>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => OnDownloadCsv.InvokeAsync(context.Id))"
+                           EndIcon="@Icons.Material.Filled.Download">
+                    Download CSV
+                </MudButton>
+            }
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -85,8 +101,14 @@
     [Parameter]
     public EventCallback<Guid> OnDownloadCsv { get; set; }
 
+    private List<RegisteredUsersDto> Users;
+
+    public Guid ClassId { get; set; }
+
     private string? _currentUserId;
     private UserDto? _currentUser;
+
+    private bool isLoading = true;
 
     private Color GetStatusColor(ClassStatus status)
     {
