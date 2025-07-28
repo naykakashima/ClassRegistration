@@ -1,0 +1,62 @@
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+
+@inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-2">
+            Registered Users:
+        </MudText>
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (Users == null || !Users.Any())
+        {
+            <MudText>No registered users found.</MudText>
+        }
+        else
+        {
+            <MudList T="string" Dense="true">
+                @foreach (var user in Users)
+                {
+                    <MudListItem>@user.UserName</MudListItem>
+                }
+            </MudList>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Guid ClassId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    private List<RegisteredUsersDto> Users;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Users = await GetRegisteredUsersUseCase.ExecuteAsync(ClassId);
+        }
+        catch (Exception ex)
+        {
+            // You might want to handle errors or notify user here
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

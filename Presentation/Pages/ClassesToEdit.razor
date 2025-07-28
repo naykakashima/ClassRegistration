@@ -21,6 +21,7 @@
 @inject IUserService UserService
 @inject ISnackbar Snackbar
 @inject IHttpContextAccessor _http
+@inject IDialogService DialogService
 
 <PageTitle>Manage Classes</PageTitle>
 
@@ -41,7 +42,7 @@
         }
         else
         {
-            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" />
+            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurvey="NavigateToSurvey" OnViewUsers="ShowRegisteredUsersModal" OnDownloadCsv="ExportCsv" />
         }
     </MudContainer>
 </CascadingAuthenticationState>
@@ -87,6 +88,26 @@
     {
         InvokeAsync(() =>
             NavigationManager.NavigateTo($"/editclasslist/{classId}")
+        );
+    }
+
+    private void NavigateToSurvey(Guid classId)
+    {
+        InvokeAsync(() =>
+            NavigationManager.NavigateTo($"/createsurvey/{classId}")
+        );
+    }
+
+    private async Task ShowRegisteredUsersModal(Guid classId)
+    {
+        var parameters = new DialogParameters { ["ClassId"] = classId };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        await DialogService.ShowAsync<RegisteredUsersDialog>("Registered Users", parameters, options);
+    }
+    private void ExportCsv(Guid classId)
+    {
+        InvokeAsync(() =>
+            Console.Write("test")
         );
     }
 }

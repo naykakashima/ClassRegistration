@@ -37,7 +37,7 @@
         <MudTd DataLabel="Registered Users">
             <MudButton Variant="Variant.Filled"
                        Size="Size.Small"
-                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       OnClick="@(() => OnViewUsers.InvokeAsync(context.Id))"
                        EndIcon="@Icons.Material.Filled.PersonSearch">
                 View Users
             </MudButton>
@@ -46,7 +46,7 @@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Secondary"
                        Size="Size.Small"
-                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
                        EndIcon="@Icons.Material.Filled.Build">
                 Survey Builder
             </MudButton>
@@ -64,7 +64,7 @@
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        Size="Size.Small"
-                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       OnClick="@(() => OnDownloadCsv.InvokeAsync(context.Id))"
                        EndIcon="@Icons.Material.Filled.Download">
                 Download CSV
             </MudButton>
@@ -78,6 +78,12 @@
 
     [Parameter]
     public EventCallback<Guid> OnEdit { get; set; }
+    [Parameter]
+    public EventCallback<Guid> OnSurvey { get; set; }
+    [Parameter]
+    public EventCallback<Guid> OnViewUsers { get; set; }
+    [Parameter]
+    public EventCallback<Guid> OnDownloadCsv { get; set; }
 
     private string? _currentUserId;
     private UserDto? _currentUser;

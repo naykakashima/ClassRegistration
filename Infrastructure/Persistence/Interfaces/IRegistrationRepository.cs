@@ -10,6 +10,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task RegisterUserAsync(Guid userId, Guid classId, string Name,  CancellationToken ct);
         Task UnregisterUserAsync(Guid userId, Guid classId, CancellationToken ct);
         Task<List<Guid>> GetClassIdsByUserAsync(Guid userId);
+        Task<List<Registration>> GetRegistrationsByClassAsync(Guid classId);
 
     }
 }
