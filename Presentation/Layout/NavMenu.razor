@@ -12,7 +12,7 @@
 
     @if (currentUser?.Role >= Role.ClassManager)
     {
-        <MudNavLink Href="/create-class" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Class</MudNavLink>
+        <MudNavLink Href="/create-subject" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Subjects</MudNavLink>
         <MudNavLink Href="/editclasslist" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Edit"> Manage Classes</MudNavLink>
     }
 
@@ -21,7 +21,6 @@
         <MudNavLink Href="/admin/roles" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AdminPanelSettings">Role Management</MudNavLink>
     }
 
-    <MudNavLink Href="/classes" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Class">View Classes</MudNavLink>
     <MudNavLink Href="/subjects" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.FormatListBulleted">View Subjects</MudNavLink>
 </MudNavMenu>
 

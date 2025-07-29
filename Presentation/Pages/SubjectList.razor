@@ -1,71 +1,167 @@
 ﻿@page "/subjects/{SubjectId:guid}"
 
 @using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Domain.Enums
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 @using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 
+@inject GetAllClassesUseCase GetAllClassesUseCase
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+@inject IRegistrationRepository RegistrationRepository
 @inject IClassRepository ClassRepo
 @inject ISubjectRepository SubjectRepo
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject RegisterForClassUseCase RegisterUseCase
+@inject IUserService UserService
+@inject ISnackbar Snackbar
 
 <Microsoft.AspNetCore.Components.Web.PageTitle>Subject Sessions</Microsoft.AspNetCore.Components.Web.PageTitle>
 
-<MudContainer Class="mt-6">
-    <MudStack Spacing="2" Direction="Row" AlignItems="AlignItems.Center" Class="mb-4">
-        <MudText Typo="Typo.h5">@SubjectTitle</MudText>
-        <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Add"
-                   Href="@($"/subjects/{SubjectId}/create-class")">
-            Create New Class
-        </MudButton>
-    </MudStack>
+<CascadingAuthenticationState>
+    <MudContainer Class="mt-6">
 
-    @if (classes == null)
-    {
-        <MudProgressCircular Indeterminate="true" />
-    }
-    else if (!classes.Any())
-    {
-        <MudAlert Severity="Severity.Info">No sessions for this subject.</MudAlert>
-    }
-    else
-    {
-        <ClassesTable Classes="classes" OnRegister="Register" OnUnregister="Unregister" RegisteredClassIds="registeredIds" />
-    }
-</MudContainer>
+        @if (currentUser == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            @if (currentUser.Role >= Role.ClassManager)
+            {
+                <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h5">@SubjectTitle</MudText>
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               Href="@($"/subjects/{SubjectId}/create-class")">
+                        Create New Class
+                    </MudButton>
+                </MudStack>
+
+            }
+            else
+            {
+                <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudText Typo="Typo.h5">@SubjectTitle</MudText>
+                </MudStack>
+            }
+
+
+            @if (classes == null)
+            {
+                <MudProgressCircular Indeterminate="true" />
+            }
+            else if (!classes.Any())
+            {
+                <MudAlert Severity="Severity.Info">No sessions for this subject.</MudAlert>
+            }
+            else
+            {
+                <ClassesTable Classes="classes" OnRegister="Register" OnUnregister="HandleUnregister" RegisteredClassIds="_userRegisteredClassIds" />
+            }
+            
+        }
+    </MudContainer>
+</CascadingAuthenticationState>
 
 @code {
     [Parameter] public Guid SubjectId { get; set; }
 
     private List<ClassSummaryDto> classes = new();
     private string SubjectTitle = "";
-    private HashSet<Guid> registeredIds = new(); // Load if needed
+    private HashSet<Guid> _userRegisteredClassIds = new();
+    private bool isLoading = true;
+    private UserDto currentUser;
 
     protected override async Task OnInitializedAsync()
     {
-        var subject = await SubjectRepo.GetByIdAsync(SubjectId);
-        SubjectTitle = subject?.Title ?? "Unknown Subject";
+        try
+        {   
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userIdString = authState.User.Identity?.Name?.Split('\\').Last();
+            var userId = authState.User.Identity?.Name?.Split('\\').Last();
+            if (!string.IsNullOrEmpty(userIdString))
+            {
+                var userDto = await UserService.GetOrCreateCurrentUserAsync(userIdString);
+                var ids = await RegistrationRepository.GetClassIdsByUserAsync(userDto.Id);
+                _userRegisteredClassIds = ids.ToHashSet();
+                currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
+            }
 
-        var all = await ClassRepo.GetAllAsync();
-        var filtered = all.Where(c => c.SubjectId == SubjectId);
+            classes = await GetAllClassesUseCase.ExecuteAsync();
 
-        classes = filtered.Select(c => new ClassSummaryDto
+            foreach (var classItem in classes)
+            {
+                var endDateTime = classItem.Date.Date + classItem.EndTime;
+
+                if (endDateTime < DateTime.Now)
+                {
+                    classItem.Status = ClassStatus.Closed;
+                }
+            }
+
+            var subject = await SubjectRepo.GetByIdAsync(SubjectId);
+            SubjectTitle = subject?.Title ?? "Unknown Subject";
+
+            var all = await ClassRepo.GetAllAsync();
+            var filtered = all.Where(c => c.SubjectId == SubjectId);
+
+            classes = filtered.Select(c => new ClassSummaryDto
+            {
+                Id = c.Id,
+                ClassName = c.ClassName,
+                SessionName = c.SessionName,
+                Presenter = c.Presenter,
+                Date = c.Date,
+                StartTime = c.StartTime,
+                EndTime = c.EndTime,
+                RegisteredCount = c.Registrations.Count,
+                MaxSlots = c.MaxSlots,
+                Status = c.Date.Add(c.EndTime) < DateTime.Now ? ClassStatus.Closed : ClassStatus.Open
+            }).ToList();
+        }
+        catch (Exception ex)
         {
-            Id = c.Id,
-            ClassName = c.ClassName,
-            SessionName = c.SessionName,
-            Presenter = c.Presenter,
-            Date = c.Date,
-            StartTime = c.StartTime,
-            EndTime = c.EndTime,
-            RegisteredCount = c.Registrations.Count,
-            MaxSlots = c.MaxSlots,
-            Status = c.Date.Add(c.EndTime) < DateTime.Now ? ClassStatus.Closed : ClassStatus.Open
-        }).ToList();
+            Snackbar.Add($"Failed to load classes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
+    
+    private void Register(Guid classId) => NavigationManager.NavigateTo($"/register/{SubjectId}/{classId}");
 
-    private Task Register(Guid classId) => Task.CompletedTask; // implement later
-    private Task Unregister(Guid classId) => Task.CompletedTask; // implement later
+    private async Task HandleUnregister(Guid classId)
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<UnregisterDialog>("Confirm Unregister", options);
+        var result = await dialog.Result;
+
+        if (result.Canceled)
+            return;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+
+            await RegistrationRepository.UnregisterUserAsync(currentUser.Id, classId, cts.Token);
+
+            _userRegisteredClassIds.Remove(classId);
+            Snackbar.Add("Successfully unregistered.", Severity.Success);
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to unregister: {ex.Message}", Severity.Error);
+        }
+    }
 }

@@ -1,67 +1,137 @@
 ﻿@page "/subjects"
 
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
 @inject GetAllSubjectsUseCase GetAllSubjectsUseCase
 @inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthProvider
+@inject IUserService UserService
+@inject ISnackbar Snackbar
 
-<MudContainer Class="mt-6">
+<CascadingAuthenticationState>
 
-     <MudStack Class="py-6 d-flex justify-space-between" Row="true">
-        <MudText Typo="Typo.h5">Subjects</MudText>
-            <MudStack Row="true">
-                <MudButton Variant="Variant.Outlined"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Edit"
-                           Size="Size.Small"
-                           OnClick="@(() => NavigationManager.NavigateTo("/create-subject"))">
-                    Manage Sessions
-                </MudButton>
-        </MudStack>
-     </MudStack>
+    <MudContainer Class="mt-6">
 
-    @if (_subjects == null)
-    {
-        <MudProgressCircular Indeterminate="true" />
-    }
-    else if (!_subjects.Any())
-    {
-        <MudAlert Severity="Severity.Info">No subjects available.</MudAlert>
-    }
-    else
-    {
-        <MudTable Items="_subjects" Hover="true" Dense="true">
-            <HeaderContent>
-                <MudTh>Title</MudTh>
-                <MudTh>Description</MudTh>
-                <MudTh>Sessions</MudTh>
-                <MudTh></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.Title</MudTd>
-                <MudTd>@context.Description</MudTd>
-                <MudTd>@context.ClassCount sessions available</MudTd>
-                <MudTd>
-                    <MudButton Variant="Variant.Filled" OnClick="@(() => NavigateToSubject(context.Id))">
-                        View Sessions
+        @if (currentUser == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        }
+        else
+        {
+            @if (currentUser.Role >= Role.ClassManager)
+            {
+                <MudStack Class="py-6 d-flex justify-space-between" Row="true">
+                    <MudText Typo="Typo.h6">Subjects</MudText>
+                    <MudStack Row="true">
+                        <MudButton Disabled="isLoading" Variant="Variant.Filled" Color="Color.Primary" OnClick="Refresh" StartIcon="@Icons.Material.Filled.Refresh">
+                            Refresh
+                            @if (isLoading)
+                            {
+                                <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
+                            }
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small"
+                                   OnClick="@(() => NavigationManager.NavigateTo("/create-subject"))">
+                            Create Subjects
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+            }
+            else
+            {
+                <MudStack Class="py-6 d-flex justify-space-between" Row="true">
+                    <MudText Typo="Typo.h6">Subjects</MudText>
+                    <MudButton Disabled="isLoading" Variant="Variant.Filled" Color="Color.Primary" OnClick="Refresh" StartIcon="@Icons.Material.Filled.Refresh">
+                        Refresh
+                        @if (isLoading)
+                        {
+                            <MudProgressCircular Size="Size.Small" Color="Color.Inherit" Class="ml-2" Indeterminate="true" />
+                        }
                     </MudButton>
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
-    }
-</MudContainer>
+                </MudStack>
+            }
+
+            @if (_subjects == null)
+            {
+                <MudProgressCircular Indeterminate="true" />
+            }
+            else if (!_subjects.Any())
+            {
+                <MudAlert Severity="Severity.Info">No subjects available.</MudAlert>
+            }
+            else
+            {
+                <MudTable Items="_subjects" Hover="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Sessions</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Title</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@context.ClassCount sessions available</MudTd>
+                        <MudTd>
+                            <MudContainer Class="justify-items-center">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@(() => NavigateToSubject(context.Id))">
+                                    View Sessions
+                            </MudButton>
+                            </MudContainer>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            
+        }
+    </MudContainer>
+</CascadingAuthenticationState>
 
 @code {
     private List<SubjectSummaryDto>? _subjects;
+    private UserDto currentUser;
+    private bool isLoading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        _subjects = await GetAllSubjectsUseCase.ExecuteAsync();
+        try
+        {
+            _subjects = await GetAllSubjectsUseCase.ExecuteAsync();
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userIdString = authState.User.Identity?.Name?.Split('\\').Last();
+            var userId = authState.User.Identity?.Name?.Split('\\').Last();
+            if (!string.IsNullOrEmpty(userIdString))
+            {
+                var userDto = await UserService.GetOrCreateCurrentUserAsync(userIdString);
+                currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load classes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+
     }
 
     private void NavigateToSubject(Guid subjectId)
     {
         NavigationManager.NavigateTo($"/subjects/{subjectId}");
+    }
+
+    private async Task Refresh()
+    {
+        NavigationManager.NavigateTo("/subjects", forceLoad: true);
     }
 }

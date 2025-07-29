@@ -1,4 +1,4 @@
-﻿@page "/register/{ClassId:guid}"
+﻿@page "/register/{SubjectId:guid}/{ClassId:guid}"
 @using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Domain.Enums
@@ -89,6 +89,7 @@
 
 @code {
     [Parameter] public Guid ClassId { get; set; }
+    [Parameter] public Guid SubjectId { get; set; }
     private ClassDetailDto Class;
     private bool IsLoading = true;
     private bool IsRegistering = false;
