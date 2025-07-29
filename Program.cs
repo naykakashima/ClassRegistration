@@ -29,7 +29,9 @@ builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IValidator<CreateClassDto>, CreateClassDtoFluentValidator>();
+builder.Services.AddScoped<IValidator<CreateSubjectDto>, CreateSubjectDtoFluentValidator>();
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
+builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<GetAllClassesUseCase>();
@@ -40,6 +42,8 @@ builder.Services.AddScoped<DeleteClassUseCase>();
 builder.Services.AddScoped<RegisteredUsersDto>();
 builder.Services.AddScoped<GetRegisteredUsersUseCase>();
 builder.Services.AddScoped<CreateClassUseCase>();
+builder.Services.AddScoped<CreateSubjectUseCase>();
+builder.Services.AddScoped<GetAllSubjectsUseCase>();
 
 
 builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));

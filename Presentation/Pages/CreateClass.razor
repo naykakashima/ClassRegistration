@@ -1,4 +1,4 @@
-﻿@page "/create-class"
+﻿@page "/subjects/{SubjectId:guid}/create-class"
 @attribute [Authorize(Roles = "ClassManager, SuperAdmin")]
 
 @using ClassRegistrationApplication2025.Application.DTOs
@@ -108,6 +108,7 @@
 
 
 @code {
+    [Parameter] public Guid SubjectId { get; set; }
     bool success;
     string[] errors = { };
     MudForm? form;
@@ -123,6 +124,8 @@
     {
         var authState = await AuthProvider.GetAuthenticationStateAsync();
         _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        formModel.SubjectId = SubjectId;
     }
 
     private async Task HandleValidSubmit()
@@ -153,6 +156,6 @@
         formModel = new CreateClassDto();
         touchedFields.Clear();
         form.ResetValidation();
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo($"/subjects/{SubjectId}");
     }
 }

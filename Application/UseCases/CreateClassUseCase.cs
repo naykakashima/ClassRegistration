@@ -35,6 +35,10 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             if (dto.Date == null || dto.StartTime == null || dto.EndTime == null)
                 throw new ArgumentException("Date and time fields are required.");
 
+            var subject = await context.Subjects.FirstOrDefaultAsync(s => s.Id == dto.SubjectId, ct);
+            if (subject == null)
+                throw new Exception("Subject not found");
+
             var newClass = new Class
             {
                 Id = Guid.NewGuid(),
@@ -47,7 +51,9 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 MaxSlots = dto.MaxSlots,
                 Status = ClassStatus.Open,
                 CreatedByUserId = user.Id,
-                CreatedByUser = user
+                CreatedByUser = user,
+                SubjectId = subject.Id,
+                Subject = subject
             };
 
             await _classRepo.AddAsync(newClass, context, ct);

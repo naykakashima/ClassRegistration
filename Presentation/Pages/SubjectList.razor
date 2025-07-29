@@ -1,0 +1,71 @@
+﻿@page "/subjects/{SubjectId:guid}"
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Presentation.Components
+@using MudBlazor
+
+@inject IClassRepository ClassRepo
+@inject ISubjectRepository SubjectRepo
+
+<Microsoft.AspNetCore.Components.Web.PageTitle>Subject Sessions</Microsoft.AspNetCore.Components.Web.PageTitle>
+
+<MudContainer Class="mt-6">
+    <MudStack Spacing="2" Direction="Row" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudText Typo="Typo.h5">@SubjectTitle</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   Href="@($"/subjects/{SubjectId}/create-class")">
+            Create New Class
+        </MudButton>
+    </MudStack>
+
+    @if (classes == null)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (!classes.Any())
+    {
+        <MudAlert Severity="Severity.Info">No sessions for this subject.</MudAlert>
+    }
+    else
+    {
+        <ClassesTable Classes="classes" OnRegister="Register" OnUnregister="Unregister" RegisteredClassIds="registeredIds" />
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public Guid SubjectId { get; set; }
+
+    private List<ClassSummaryDto> classes = new();
+    private string SubjectTitle = "";
+    private HashSet<Guid> registeredIds = new(); // Load if needed
+
+    protected override async Task OnInitializedAsync()
+    {
+        var subject = await SubjectRepo.GetByIdAsync(SubjectId);
+        SubjectTitle = subject?.Title ?? "Unknown Subject";
+
+        var all = await ClassRepo.GetAllAsync();
+        var filtered = all.Where(c => c.SubjectId == SubjectId);
+
+        classes = filtered.Select(c => new ClassSummaryDto
+        {
+            Id = c.Id,
+            ClassName = c.ClassName,
+            SessionName = c.SessionName,
+            Presenter = c.Presenter,
+            Date = c.Date,
+            StartTime = c.StartTime,
+            EndTime = c.EndTime,
+            RegisteredCount = c.Registrations.Count,
+            MaxSlots = c.MaxSlots,
+            Status = c.Date.Add(c.EndTime) < DateTime.Now ? ClassStatus.Closed : ClassStatus.Open
+        }).ToList();
+    }
+
+    private Task Register(Guid classId) => Task.CompletedTask; // implement later
+    private Task Unregister(Guid classId) => Task.CompletedTask; // implement later
+}

@@ -16,6 +16,9 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public List<Registration> Registrations { get; set; } = new();
         public Guid CreatedByUserId { get; set; }
         public User CreatedByUser { get; set; }
+
+        public Guid SubjectId { get; set; }
+        public Subject Subject { get; set; }
     }
 
 }

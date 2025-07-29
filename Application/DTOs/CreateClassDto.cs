@@ -18,6 +18,7 @@ namespace ClassRegistrationApplication2025.Application.DTOs
             public Guid CreatedByUserId { get; set; }
             public ClassStatus Status { get; set; }
             public User CreatedByUser { get; set; }
+            public Guid SubjectId { get; set; }
     }
 
 }

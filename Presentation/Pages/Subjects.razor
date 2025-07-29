@@ -1,0 +1,67 @@
+﻿@page "/subjects"
+
+@using MudBlazor
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@inject GetAllSubjectsUseCase GetAllSubjectsUseCase
+@inject NavigationManager NavigationManager
+
+<MudContainer Class="mt-6">
+
+     <MudStack Class="py-6 d-flex justify-space-between" Row="true">
+        <MudText Typo="Typo.h5">Subjects</MudText>
+            <MudStack Row="true">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           Size="Size.Small"
+                           OnClick="@(() => NavigationManager.NavigateTo("/create-subject"))">
+                    Manage Sessions
+                </MudButton>
+        </MudStack>
+     </MudStack>
+
+    @if (_subjects == null)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (!_subjects.Any())
+    {
+        <MudAlert Severity="Severity.Info">No subjects available.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="_subjects" Hover="true" Dense="true">
+            <HeaderContent>
+                <MudTh>Title</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Sessions</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Title</MudTd>
+                <MudTd>@context.Description</MudTd>
+                <MudTd>@context.ClassCount sessions available</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Filled" OnClick="@(() => NavigateToSubject(context.Id))">
+                        View Sessions
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<SubjectSummaryDto>? _subjects;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _subjects = await GetAllSubjectsUseCase.ExecuteAsync();
+    }
+
+    private void NavigateToSubject(Guid subjectId)
+    {
+        NavigationManager.NavigateTo($"/subjects/{subjectId}");
+    }
+}

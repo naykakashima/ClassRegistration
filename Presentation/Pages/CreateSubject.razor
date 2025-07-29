@@ -1,0 +1,64 @@
+﻿@page "/create-subject"
+@* @attribute [Authorize(Roles = "ClassManager, SuperAdmin")] *@
+@* @attribute [Authorize] *@
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Presentation.Pages.Validators
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject CreateSubjectUseCase UseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthProvider
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">Create a Subject</MudText>
+
+    <MudForm Model="@formModel" @ref="form" @bind-IsValid="@success" Validator="validator.Validate">
+        <MudTextField @bind-Value="formModel.Title"
+                      Label="Subject Title"
+                      For="@(() => formModel.Title)"
+                      Required="true"
+                      OnBlur="@(() => SetTouched(nameof(formModel.Title)))"
+                      Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.Title))))" />
+
+        <MudTextField @bind-Value="formModel.Description"
+                      Label="Subject Description"
+                      For="@(() => formModel.Description)"
+                      Lines="4"
+                      OnBlur="@(() => SetTouched(nameof(formModel.Description)))"
+                      Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.Description))))" />
+
+        <MudButton OnClick="HandleValidSubmit" Disabled="@(!success)">Submit</MudButton>
+    </MudForm>
+</MudPaper>
+
+@code {
+    private CreateSubjectDto formModel = new();
+    private CreateSubjectDtoFluentValidator validator = new();
+    private MudForm? form;
+    private bool success;
+    Dictionary<string, bool> touchedFields = new();
+
+    bool HasTouched(string fieldName) => touchedFields.TryGetValue(fieldName, out var touched) && touched;
+    void SetTouched(string fieldName) => touchedFields[fieldName] = true;
+
+    private async Task HandleValidSubmit()
+    {
+        await form.Validate();
+        if (!success) return;
+
+        try
+        {
+            await UseCase.ExecuteAsync(formModel);
+            Snackbar.Add("Subject created successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/subjects");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Something went wrong: " + ex.Message, Severity.Error);
+        }
+    }
+}

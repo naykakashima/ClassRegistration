@@ -40,6 +40,9 @@ namespace ClassRegistrationApplication2025.Presentation.Pages.Validators
             RuleFor(x => x.MaxSlots)
                 .GreaterThan(0)
                 .LessThan(999);
+
+            RuleFor(x => x.SubjectId)
+                .NotEmpty().WithMessage("SubjectId is required.");
         }
 
         public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>

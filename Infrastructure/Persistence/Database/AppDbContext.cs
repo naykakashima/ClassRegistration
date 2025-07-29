@@ -8,6 +8,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
         public DbSet<Class> Classes { get; set; }
         public DbSet<Registration> Registrations { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Subject> Subjects { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -38,8 +39,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
                       .WithMany(u => u.ClassesCreated)
                       .HasForeignKey(c => c.CreatedByUserId)
                       .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(c => c.Subject)
+                      .WithMany(s => s.Classes)
+                      .HasForeignKey(c => c.SubjectId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
         }
-    }
 
+    }
 }
