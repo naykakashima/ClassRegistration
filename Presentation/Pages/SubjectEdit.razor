@@ -1,0 +1,192 @@
+﻿@page "/subjects/{SubjectId:guid}/edit"
+@using ClassRegistrationApplication2025.Application.DTOs
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Roles = "ClassManager,SuperAdmin")]
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Domain.Enums
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using MudBlazor
+@using System.Text
+
+
+@inject GetClassDetailsUseCase GetClassDetailsUseCase
+@inject GetAllClassesBySubjectIdUseCase GetAllClassesBySubjectIdUseCase
+@inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
+@inject RegisterForClassUseCase RegisterUseCase
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager NavigationManager
+@inject GetAllClassesUseCase GetAllClassesUseCase
+@using static System.Net.WebRequestMethods
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject IHttpContextAccessor _http
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+
+<CascadingAuthenticationState>
+    <MudContainer>
+        <MudStack Class="py-6 d-flex justify-space-between" Row="true">
+            <MudText Typo="Typo.h5" Class="mb-4">Manage Classes for @Subject?.Title</MudText>
+        </MudStack>
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            <MudText>Loading classes...</MudText>
+        }
+        else if (classes == null || !classes.Any())
+        {
+            <MudAlert Severity="Severity.Info">Class not found.</MudAlert>
+        }
+        else
+        {
+            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurvey="NavigateToSurvey" OnViewUsers="ShowRegisteredUsersModal" OnDownloadExcel="ExportExcel" />
+        }
+    </MudContainer>
+</CascadingAuthenticationState>
+
+@code {
+    [Parameter] public Guid SubjectId { get; set; }
+
+    private SubjectSummaryDto? Subject;
+    private List<ClassSummaryDto> FilteredClasses = new();
+    private bool IsLoading = true;
+
+    private List<ClassSummaryDto> classes = new();
+    private UserDto currentUser;
+    private bool isLoading = true;
+    private string? _currentUserId;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.Identity?.Name?.Split('\\').Last();
+            _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+            currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
+            classes = await GetAllClassesBySubjectIdUseCase.ExecuteAsync(SubjectId);
+
+
+            foreach (var classItem in classes)
+            {
+                var endDateTime = classItem.Date.Date + classItem.EndTime;
+                if (endDateTime < DateTime.Now)
+                {
+                    classItem.Status = ClassStatus.Closed;
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load classes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToEdit(Guid classId)
+    {
+        InvokeAsync(() =>
+            NavigationManager.NavigateTo($"/editclasslist/{classId}")
+        );
+    }
+
+    private void NavigateToSurvey(Guid classId)
+    {
+        InvokeAsync(() =>
+            NavigationManager.NavigateTo($"/createsurvey/{classId}")
+        );
+    }
+
+    private async Task ShowRegisteredUsersModal(Guid classId)
+    {
+        var parameters = new DialogParameters { ["ClassId"] = classId };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge, FullWidth = true };
+        await DialogService.ShowAsync<RegisteredUsersDialog>("Registered Users", parameters, options);
+    }
+
+    private Task ExportExcel(Guid classId)
+    {
+        return InvokeAsync(async () =>
+        {
+            try
+            {
+                var result = await GetClassDetailsUseCase.ExecuteAsync(classId);
+                if (!result.IsSuccess || result.Value == null)
+                {
+                    Snackbar.Add("Class not found.", Severity.Warning);
+                    return;
+                }
+
+                var classDetail = result.Value;
+                var users = await GetRegisteredUsersUseCase.ExecuteAsync(classId);
+
+                if (users == null || !users.Any())
+                {
+                    Snackbar.Add("No registered users for this class.", Severity.Info);
+                    return;
+                }
+
+                using var workbook = new ClosedXML.Excel.XLWorkbook();
+                var worksheet = workbook.Worksheets.Add("Registered Users");
+
+                // Header row
+                string[] headers = {
+                "Class Name", "Session Name", "Presenter", "Date", "Start Time", "End Time", "User ID", "User Name", "Registered At"
+                };
+
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    worksheet.Cell(1, i + 1).Value = headers[i];
+                    worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+                }
+
+                // Fill data
+                int row = 2;
+                foreach (var user in users)
+                {
+                    worksheet.Cell(row, 1).Value = classDetail.ClassName;
+                    worksheet.Cell(row, 2).Value = classDetail.SessionName;
+                    worksheet.Cell(row, 3).Value = classDetail.Presenter;
+                    worksheet.Cell(row, 4).Value = classDetail.Date.ToString("yyyy-MM-dd");
+                    worksheet.Cell(row, 5).Value = classDetail.StartTime.ToString();
+                    worksheet.Cell(row, 6).Value = classDetail.EndTime.ToString();
+                    worksheet.Cell(row, 7).Value = user.UserID;
+                    worksheet.Cell(row, 8).Value = user.UserName;
+                    worksheet.Cell(row, 9).Value = user.RegisteredAt.ToString("yyyy-MM-dd HH:mm");
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents(); // Auto-fit
+                worksheet.SheetView.FreezeRows(1); // Freeze header
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+                var content = Convert.ToBase64String(stream.ToArray());
+
+                var fileName = $"{classDetail.ClassName}_{classDetail.SessionName}.xlsx".Replace(" ", "_");
+
+                await JS.InvokeVoidAsync("downloadFile", fileName, content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+                Snackbar.Add($"Downloading Excel for {classDetail.ClassName}", Severity.Success);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Failed to export Excel: {ex.Message}", Severity.Error);
+            }
+        });
+    }
+}

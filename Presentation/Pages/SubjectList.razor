@@ -43,8 +43,14 @@
                                Href="@($"/subjects/{SubjectId}/create-class")">
                         Create New Class
                     </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Edit"
+                               Size="Size.Small"
+                               Href="@($"/subjects/{SubjectId}/edit")">
+                        Manage Classes
+                    </MudButton>
                 </MudStack>
-
             }
             else
             {
