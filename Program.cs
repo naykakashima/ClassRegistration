@@ -1,8 +1,10 @@
 using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Application.UseCases;
+using ClassRegistrationApplication2025.Infrastructure;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories;
+using ClassRegistrationApplication2025.Infrastructure.Services;
 using ClassRegistrationApplication2025.Presentation.Components;
 using ClassRegistrationApplication2025.Presentation.Pages.Validators;
 using FluentValidation;
@@ -10,7 +12,6 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.EntityFrameworkCore;
-using ClassRegistrationApplication2025.Infrastructure;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,7 +27,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<CreateClassUseCase>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IValidator<CreateClassDto>, CreateClassDtoFluentValidator>();
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
@@ -38,6 +39,7 @@ builder.Services.AddScoped<UpdateClassUseCase>();
 builder.Services.AddScoped<DeleteClassUseCase>();
 builder.Services.AddScoped<RegisteredUsersDto>();
 builder.Services.AddScoped<GetRegisteredUsersUseCase>();
+builder.Services.AddScoped<CreateClassUseCase>();
 
 
 builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));

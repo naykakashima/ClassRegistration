@@ -42,6 +42,5 @@
   <ItemGroup>
     <Folder Include="Application\Validation\" />
     <Folder Include="Domain\ValueObjects\" />
-    <Folder Include="Infrastructure\ExternalServices\" />
   </ItemGroup>
 </Project>

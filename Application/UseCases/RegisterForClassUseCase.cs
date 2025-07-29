@@ -1,7 +1,8 @@
 ﻿// RegisterForClassUseCase.cs
 using ClassRegistrationApplication2025.Application.Common;
-using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Domain.Enums;
+using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,15 +13,18 @@ namespace ClassRegistrationApplication2025.Application.UseCases
         private readonly IClassRepository _classRepository;
         private readonly IRegistrationRepository _registrationRepository;
         private readonly IUserService _userService;
+        private readonly IEmailService _emailService;
 
         public RegisterForClassUseCase(
             IClassRepository classRepository,
             IRegistrationRepository registrationRepository,
-            IUserService userService)
+            IUserService userService,
+            IEmailService emailService)
         {
             _classRepository = classRepository;
             _registrationRepository = registrationRepository;
             _userService = userService;
+            _emailService = emailService;
         }
 
         public async Task<Result> ExecuteAsync(Guid classId, string adUserId, string Name, string EmailSMTP, CancellationToken ct = default)
@@ -43,6 +47,18 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             var registrationCount = await _registrationRepository.GetRegistrationCountByClassAsync(classId);
             if (registrationCount >= cls.MaxSlots)
                 return Result.Failure("Class is full.");
+
+            await _emailService.SendRegistrationConfirmationAsync(
+                new UserDto { Name = Name, EmailSMTP = EmailSMTP },
+                new ClassDetailDto
+                {
+                    ClassName = cls.ClassName,
+                    SessionName = cls.SessionName,
+                    Presenter = cls.Presenter,
+                    Date = cls.Date,
+                    StartTime = cls.StartTime,
+                    EndTime = cls.EndTime
+                });
 
             await _registrationRepository.RegisterUserAsync(user.Id, classId, Name, EmailSMTP, ct);
 
