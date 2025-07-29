@@ -20,6 +20,7 @@ namespace ClassRegistrationApplication2025.Domain.Entities
 
         // Denormalized for display/audit
         public string UserName { get; set; }
+        public string EmailSMTP { get; set; }
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
     }
 }

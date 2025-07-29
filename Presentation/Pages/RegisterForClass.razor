@@ -165,7 +165,7 @@
                 return;
             }
 
-            var result = await RegisterUseCase.ExecuteAsync(ClassId, userId, Name);
+            var result = await RegisterUseCase.ExecuteAsync(ClassId, userId, Name, EmailSMTP);
 
             if (result.IsSuccess)
             {

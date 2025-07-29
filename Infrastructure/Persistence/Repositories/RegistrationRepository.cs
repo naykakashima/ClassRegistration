@@ -27,7 +27,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Registrations.AnyAsync(r => r.ClassId == classId && r.UserId == userId);
         }
 
-        public async Task RegisterUserAsync(Guid userId, Guid classId, string Name, CancellationToken ct)
+        public async Task RegisterUserAsync(Guid userId, Guid classId, string Name, string EmailSMTP, CancellationToken ct)
         {
             var registration = new Registration
             {
@@ -35,6 +35,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 UserId = userId,
                 ClassId = classId,
                 UserName = Name,
+                EmailSMTP = EmailSMTP,
                 RegisteredAt = DateTime.UtcNow
             };
 

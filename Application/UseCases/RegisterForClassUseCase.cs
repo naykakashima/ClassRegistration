@@ -23,7 +23,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             _userService = userService;
         }
 
-        public async Task<Result> ExecuteAsync(Guid classId, string adUserId, string Name, CancellationToken ct = default)
+        public async Task<Result> ExecuteAsync(Guid classId, string adUserId, string Name, string EmailSMTP, CancellationToken ct = default)
         {
             var user = await _userService.GetUserByAdUserIdAsync(adUserId, ct);
             if (user == null)
@@ -44,7 +44,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             if (registrationCount >= cls.MaxSlots)
                 return Result.Failure("Class is full.");
 
-            await _registrationRepository.RegisterUserAsync(user.Id, classId, Name, ct);
+            await _registrationRepository.RegisterUserAsync(user.Id, classId, Name, EmailSMTP, ct);
 
             return Result.Success();
         }
