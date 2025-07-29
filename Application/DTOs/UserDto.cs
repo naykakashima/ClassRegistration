@@ -7,6 +7,7 @@ namespace ClassRegistrationApplication2025.Application.DTOs
         public Guid Id { get; set; }
         public string UserID { get; set; }
         public string Name { get; set; }
+        public string EmailSMTP { get; set; }
         public Role Role { get; set; }
     }
 }

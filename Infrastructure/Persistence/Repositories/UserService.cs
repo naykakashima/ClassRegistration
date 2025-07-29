@@ -32,6 +32,9 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 
             var user = await context.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
             var displayName = AdHelper.GetDisplayNameFromAd(adUserId, _adSettings.Value.LdapPath) ?? adUserId;
+            var properties = AdHelper.DumpUserProperties(adUserId, _adSettings.Value.LdapPath);
+            var email = AdHelper.ExtractPrimarySmtpFromPropertiesDump(properties) ?? adUserId;
+
 
 
             if (user == null)
@@ -41,7 +44,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                     Id = Guid.NewGuid(),
                     UserID = adUserId,
                     Name = displayName,
-                    Role = Role.User
+                    Role = Role.User,
+                    EmailSMTP = email
                 };
 
                 try
@@ -61,7 +65,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 Id = user.Id,
                 Name = user.Name,
                 UserID = user.UserID,
-                Role = user.Role
+                Role = user.Role,
+                EmailSMTP = user.EmailSMTP
             };
 
             return _cachedUser;
@@ -87,7 +92,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                     Id = u.Id,
                     Name = u.Name,
                     UserID = u.UserID,
-                    Role = u.Role
+                    Role = u.Role,
+                    EmailSMTP = u.EmailSMTP
                 })
                 .ToListAsync();
         }

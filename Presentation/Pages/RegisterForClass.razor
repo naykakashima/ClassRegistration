@@ -156,6 +156,7 @@
         {
             var authState = await AuthProvider.GetAuthenticationStateAsync();
             var userId = _currentUserId;
+            var EmailSMTP = _currentUser?.EmailSMTP;
             var Name = _currentUser?.Name;
 
             if (string.IsNullOrEmpty(userId))
