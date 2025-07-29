@@ -1,6 +1,5 @@
 ﻿using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
-using System.Net;
 using System.Net.Mail;
 using System.Text;
 
@@ -22,21 +21,21 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
             var smtpSection = _config.GetSection("Smtp");
             var smtpHost = smtpSection["Host"];
             var smtpPort = int.Parse(smtpSection["Port"]);
-            var smtpUser = smtpSection["Username"];
-            var smtpPass = smtpSection["Password"];
             var fromEmail = smtpSection["From"];
 
-            var mail = new MailMessage();
-            mail.From = new MailAddress(fromEmail);
+            var mail = new MailMessage
+            {
+                From = new MailAddress(fromEmail),
+                Subject = $"Class Registration Confirmed: {classInfo.ClassName}",
+                IsBodyHtml = true,
+                Body = GenerateHtmlBody(user, classInfo)
+            };
             mail.To.Add(user.EmailSMTP);
-            mail.Subject = $"Class Registration Confirmed: {classInfo.ClassName}";
-            mail.IsBodyHtml = true;
-            mail.Body = GenerateHtmlBody(user, classInfo);
 
             using var client = new SmtpClient(smtpHost, smtpPort)
             {
-                Credentials = new NetworkCredential(smtpUser, smtpPass),
-                EnableSsl = true
+                UseDefaultCredentials = true,
+                EnableSsl = false
             };
 
             try
