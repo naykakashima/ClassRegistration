@@ -3,11 +3,15 @@
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
 @using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.JSInterop
 @using MudBlazor
 
 @inject GetAllSubjectsUseCase GetSubjectsUseCase
 @inject DeleteSubjectUseCase DeleteSubjectUseCase
 @inject NavigationManager Nav
+@inject GetAllClassesBySubjectIdUseCase GetAllClassesBySubjectIdUseCase
+@inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
+@inject IJSRuntime JS
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -99,9 +103,89 @@
 
     private async Task HandleExport(Guid subjectId)
     {
-        Snackbar.Add($"Exporting registrations for subject: {subjectId}", Severity.Info);
-        // Implement later
+        try
+        {
+            var classes = await GetAllClassesBySubjectIdUseCase.ExecuteAsync(subjectId);
+            if (classes == null || !classes.Any())
+            {
+                Snackbar.Add("No classes found for this subject.", Severity.Info);
+                return;
+            }
+
+            using var workbook = new ClosedXML.Excel.XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Subject Registrations");
+
+            // Headers
+            string[] headers = {
+            "Class Name", "Session Name", "Presenter", "Date", "Start Time", "End Time",
+            "User ID", "User Name", "Registered At"
+        };
+
+            for (int i = 0; i < headers.Length; i++)
+            {
+                worksheet.Cell(1, i + 1).Value = headers[i];
+                worksheet.Cell(1, i + 1).Style.Font.Bold = true;
+            }
+
+            int row = 2;
+            int totalRegistrations = 0;
+
+            foreach (var classItem in classes)
+            {
+                var users = await GetRegisteredUsersUseCase.ExecuteAsync(classItem.Id);
+                if (users == null || !users.Any())
+                    continue; // Skip classes without registrations
+
+                foreach (var user in users)
+                {
+                    worksheet.Cell(row, 1).Value = classItem.ClassName;
+                    worksheet.Cell(row, 2).Value = classItem.SessionName;
+                    worksheet.Cell(row, 3).Value = classItem.Presenter;
+                    worksheet.Cell(row, 4).Value = classItem.Date.ToString("yyyy-MM-dd");
+                    worksheet.Cell(row, 5).Value = classItem.StartTime.ToString();
+                    worksheet.Cell(row, 6).Value = classItem.EndTime.ToString();
+
+                    worksheet.Cell(row, 7).Value = user.UserID;
+                    worksheet.Cell(row, 8).Value = user.UserName;
+                    worksheet.Cell(row, 9).Value = user.RegisteredAt.ToString("yyyy-MM-dd HH:mm");
+
+                    row++;
+                    totalRegistrations++;
+                }
+            }
+
+            if (totalRegistrations == 0)
+            {
+                Snackbar.Add("No registrations found for this subject.", Severity.Info);
+                return;
+            }
+
+            // Summary row:
+            worksheet.Cell(row + 1, 1).Value = "Total Registrations:";
+            worksheet.Cell(row + 1, 2).Value = totalRegistrations;
+            worksheet.Range($"A{row + 1}:B{row + 1}").Style.Font.Bold = true;
+
+            worksheet.Columns().AdjustToContents();
+            worksheet.SheetView.FreezeRows(1);
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var content = Convert.ToBase64String(stream.ToArray());
+
+            var subject = Subjects.FirstOrDefault(s => s.Id == subjectId);
+            var safeTitle = subject?.Title?.Replace(" ", "_") ?? "Subject";
+            var fileName = $"{safeTitle}_Registrations.xlsx";
+
+            await JS.InvokeVoidAsync("downloadFile", fileName, content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+            Snackbar.Add("Excel export completed.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to export Excel: {ex.Message}", Severity.Error);
+        }
     }
+
 
     private async Task HandleAttendance(Guid subjectId)
     {
