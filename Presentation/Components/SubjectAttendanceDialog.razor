@@ -32,12 +32,14 @@
                             }
                             else
                             {
-                                <MudList T="String">
+                                <MudList T="string">
                                     @foreach (var user in users)
                                     {
-                                        <MudListItem>@user.UserName</MudListItem>
+                                        <MudListItem Text="@user.UserName" Icon="@Icons.Material.Filled.Person" />
                                     }
+
                                 </MudList>
+                                
                             }
                         }
                     </MudExpansionPanel>
