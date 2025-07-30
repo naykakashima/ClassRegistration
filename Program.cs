@@ -1,9 +1,12 @@
 using ClassRegistrationApplication2025.Application.DTOs;
+using ClassRegistrationApplication2025.Application.Interfaces;
+using ClassRegistrationApplication2025.Application.Services;
 using ClassRegistrationApplication2025.Application.UseCases;
 using ClassRegistrationApplication2025.Infrastructure;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories;
+using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories.ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories;
 using ClassRegistrationApplication2025.Infrastructure.Services;
 using ClassRegistrationApplication2025.Presentation.Components;
 using ClassRegistrationApplication2025.Presentation.Pages.Validators;
@@ -13,6 +16,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
+using SurveyBuilder.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +37,10 @@ builder.Services.AddScoped<IValidator<CreateSubjectDto>, CreateSubjectDtoFluentV
 builder.Services.AddScoped<IClassRepository, ClassRepository>();
 builder.Services.AddScoped<ISubjectRepository, SubjectRepository>();
 builder.Services.AddScoped<IRegistrationRepository, RegistrationRepository>();
+builder.Services.AddScoped<ISurveyRepository, SurveyRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddSingleton<ISurveyJsonService, SurveyJsonService>();
 builder.Services.AddScoped<GetAllClassesUseCase>();
 builder.Services.AddScoped<GetClassDetailsUseCase>();
 builder.Services.AddScoped<RegisterForClassUseCase>();
@@ -48,6 +55,8 @@ builder.Services.AddScoped<GetAllClassesBySubjectIdUseCase>();
 builder.Services.AddScoped<UpdateSubjectUseCase>();
 builder.Services.AddScoped<GetSubjectByIdUseCase>();
 builder.Services.AddScoped<DeleteSubjectUseCase>();
+
+
 
 
 

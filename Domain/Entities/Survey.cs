@@ -21,6 +21,7 @@ namespace ClassRegistrationApplication2025.Domain.Entities
 
         // Optional reverse nav props
         public Class? Class { get; set; }
+        public Guid? SubjectId { get; set; }
         public Subject? Subject { get; set; }
     }
 }

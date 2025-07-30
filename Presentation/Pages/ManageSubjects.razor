@@ -75,7 +75,7 @@
 
     private void HandleSurvey(Guid subjectId)
     {
-        Snackbar.Add($"Survey Builder not implemented yet for subject: {subjectId}", Severity.Info);
+        Nav.NavigateTo($"/subjects/{subjectId}/survey");
     }
 
     private async Task HandleDelete(Guid subjectId)
