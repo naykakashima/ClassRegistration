@@ -99,11 +99,19 @@
 
     private void NavigateToEdit(Guid classId)
     {
-        InvokeAsync(() =>
-            NavigationManager.NavigateTo($"/editclasslist/{classId}")
-        );
+        if (SubjectId != Guid.Empty)
+        {
+            InvokeAsync(() =>
+                NavigationManager.NavigateTo($"/subjects/{SubjectId}/edit/{classId}")
+            );
+        }
+        else
+        {
+            Snackbar.Add("Invalid SubjectId. Cannot navigate to edit page.", Severity.Error);
+        }
     }
 
+    //To fix routing
     private void NavigateToSurvey(Guid classId)
     {
         InvokeAsync(() =>

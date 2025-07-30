@@ -20,7 +20,7 @@
 
 <CascadingAuthenticationState>
     <MudPaper Class="pa-4">
-        <MudText Typo="Typo.h5" Class="mb-4">Edit Class (Subject Scoped)</MudText>
+        <MudText Typo="Typo.h5" Class="mb-4">Edit Class</MudText>
 
         @if (IsLoading)
         {
@@ -170,7 +170,7 @@
         {
             await UpdateUseCase.ExecuteAsync(ClassId, formModel);
             Snackbar.Add("Class successfully updated!", Severity.Success);
-            NavigationManager.NavigateTo($"/subjects/{SubjectId}/edit");
+            NavigationManager.NavigateTo($"/subjects/{SubjectId}");
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -188,7 +188,7 @@
         {
             await DeleteClassUseCase.ExecuteAsync(ClassId, formModel);
             Snackbar.Add("Class successfully deleted!", Severity.Success);
-            NavigationManager.NavigateTo($"/subjects/{SubjectId}/edit");
+            NavigationManager.NavigateTo($"/subjects/{SubjectId}");
         }
         catch (UnauthorizedAccessException ex)
         {

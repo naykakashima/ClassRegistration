@@ -38,16 +38,19 @@
                 <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="mb-4">
                     <MudText Typo="Typo.h5">@SubjectTitle</MudText>
                     <MudSpacer />
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Primary"
+                               Size="Size.Small"
                                StartIcon="@Icons.Material.Filled.Add"
                                Href="@($"/subjects/{SubjectId}/create-class")">
                         Create New Class
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined"
+                    <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.Edit"
                                Size="Size.Small"
-                               Href="@($"/subjects/{SubjectId}/edit")">
+                               Href="@($"/subjects/{SubjectId}/edit")"
+                               >
                         Manage Classes
                     </MudButton>
                 </MudStack>

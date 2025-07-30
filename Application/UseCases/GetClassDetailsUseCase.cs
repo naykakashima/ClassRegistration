@@ -40,7 +40,8 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                     MaxSlots = classEntity.MaxSlots,
                     Status = classEntity.Status,
                     RegisteredCount = classEntity.Registrations.Count,
-                    CreatedByUserId = classEntity.CreatedByUserId
+                    CreatedByUserId = classEntity.CreatedByUserId,
+                    SubjectId = classEntity.SubjectId
                 });
             }
             catch (Exception ex)
