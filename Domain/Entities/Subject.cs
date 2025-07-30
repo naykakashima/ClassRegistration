@@ -12,5 +12,8 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public string? Description { get; set; }
 
         public List<Class> Classes { get; set; } = new();
+        public Guid? SurveyId { get; set; }
+        public Survey? Survey { get; set; }
+
     }
 }

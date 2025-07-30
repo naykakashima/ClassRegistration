@@ -9,6 +9,9 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
         public DbSet<Registration> Registrations { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Subject> Subjects { get; set; }
+        public DbSet<Survey> Surveys { get; set; }
+        public DbSet<SurveyResponse> SurveyResponses { get; set; }
+
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -32,7 +35,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Class CreatedByUser relationship
+            // Class CreatedByUser + Subject relationships
             modelBuilder.Entity<Class>(entity =>
             {
                 entity.HasOne(c => c.CreatedByUser)
@@ -44,8 +47,43 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
                       .WithMany(s => s.Classes)
                       .HasForeignKey(c => c.SubjectId)
                       .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(c => c.Survey)
+                      .WithOne(s => s.Class)
+                      .HasForeignKey<Class>(c => c.SurveyId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<Subject>(entity =>
+            {
+                entity.HasOne(s => s.Survey)
+                      .WithOne(sv => sv.Subject)
+                      .HasForeignKey<Subject>(s => s.SurveyId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<Survey>(entity =>
+            {
+                entity.HasOne(s => s.CreatedByUser)
+                      .WithMany()
+                      .HasForeignKey(s => s.CreatedByUserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<SurveyResponse>(entity =>
+            {
+                entity.HasOne(sr => sr.Survey)
+                      .WithMany()
+                      .HasForeignKey(sr => sr.SurveyId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(sr => sr.User)
+                      .WithMany()
+                      .HasForeignKey(sr => sr.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(sr => new { sr.SurveyId, sr.UserId }).IsUnique(); // Enforce one response per user per survey
             });
         }
-
     }
 }
