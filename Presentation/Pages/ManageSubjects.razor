@@ -1,0 +1,118 @@
+﻿@page "/subjects/manage-subjects"
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Presentation.Components
+@using MudBlazor
+
+@inject GetAllSubjectsUseCase GetSubjectsUseCase
+@inject NavigationManager Nav
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+
+<title>Manage Subjects</title>
+
+<MudPaper Class="p-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Manage Subjects</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (!Subjects.Any())
+    {
+        <MudText>No subjects found.</MudText>
+    }
+    else
+    {
+        <SubjectsTableWithEdit Subjects="Subjects"
+                               OnEdit="HandleEdit"
+                               OnSurvey="HandleSurvey"
+                               OnDelete="HandleDelete"
+                               OnExportExcel="HandleExport"
+                               OnViewAttendance="HandleAttendance" />
+    }
+</MudPaper>
+
+@code {
+    private List<SubjectSummaryDto> Subjects = new();
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSubjects();
+    }
+
+    private async Task LoadSubjects()
+    {
+        isLoading = true;
+        try
+        {
+            Subjects = await GetSubjectsUseCase.ExecuteAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to load subjects: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void HandleEdit(Guid subjectId)
+    {
+        Nav.NavigateTo($"/subjects/edit/{subjectId}");
+    }
+
+    private void HandleSurvey(Guid subjectId)
+    {
+        Snackbar.Add($"Survey Builder not implemented yet for subject: {subjectId}", Severity.Info);
+    }
+
+    private async Task HandleDelete(Guid subjectId)
+    {
+        var subject = Subjects.FirstOrDefault(s => s.Id == subjectId);
+        if (subject == null || subject.ClassCount > 0)
+        {
+            Snackbar.Add("Cannot delete a subject that has sessions.", Severity.Warning);
+            return;
+        }
+
+        // var confirmed = await ShowConfirmationDialog($"Delete subject '{subject.Title}'?");
+        // if (!confirmed)
+        //     return;
+
+        try
+        {
+            // await DeleteSubjectUseCase.ExecuteAsync(subjectId); // implement this
+            Subjects.Remove(subject);
+            Snackbar.Add("Subject deleted.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to delete subject: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task HandleExport(Guid subjectId)
+    {
+        Snackbar.Add($"Exporting registrations for subject: {subjectId}", Severity.Info);
+        // Implement later
+    }
+
+    private async Task HandleAttendance(Guid subjectId)
+    {
+        var parameters = new DialogParameters { ["SubjectId"] = subjectId };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
+        // DialogService.Show<SubjectAttendanceDialog>("View Attendance", parameters, options);
+    }
+
+    // private async Task<bool> ShowConfirmationDialog(string message)
+    // {
+    //     var dialog = DialogService.Show<ConfirmationDialog>("Confirm", new DialogParameters { ["ContentText"] = message });
+    //     var result = await dialog.Result;
+    //     return !result.Canceled;
+    // }
+}

@@ -1,0 +1,126 @@
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Domain.Enums
+@using MudBlazor
+
+<MudTable Items="Subjects" Hover="true" Bordered="true" Dense="true" SortLabel="Sort By">
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel SortBy="@(new Func<SubjectSummaryDto, object>(x => x.Title))" InitialDirection="SortDirection.Ascending">
+                Subject Title
+            </MudTableSortLabel>
+        </MudTh>
+        <MudTh>Description</MudTh>
+        <MudTh>Sessions</MudTh>
+        <MudTh>Edit</MudTh>
+        <MudTh>Attendance</MudTh>
+        <MudTh>Export Excel</MudTh>
+        <MudTh>Survey</MudTh>
+        <MudTh>Delete</MudTh>
+    </HeaderContent>
+
+    <RowTemplate>
+        <MudTd DataLabel="Subject Title">@context.Title</MudTd>
+        <MudTd DataLabel="Description">@context.Description</MudTd>
+        <MudTd DataLabel="Sessions">@context.ClassCount</MudTd>
+
+        <MudTd>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnEdit.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.Edit">
+                Edit
+            </MudButton>
+        </MudTd>
+
+        <MudTd>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Secondary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnViewAttendance.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.People">
+                Attendance
+            </MudButton>
+        </MudTd>
+
+        <MudTd>
+            @if (context.ClassCount == 0)
+            {
+                <MudTooltip Text="No sessions to export">
+                    <MudButton Variant="Variant.Filled"
+                               Disabled="true"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               EndIcon="@Icons.Material.Filled.Download">
+                        Export
+                    </MudButton>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Small"
+                           OnClick="@(() => OnExportExcel.InvokeAsync(context.Id))"
+                           EndIcon="@Icons.Material.Filled.Download">
+                    Export
+                </MudButton>
+            }
+        </MudTd>
+
+        <MudTd>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Tertiary"
+                       Size="Size.Small"
+                       OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
+                       EndIcon="@Icons.Material.Filled.Build">
+                Survey
+            </MudButton>
+        </MudTd>
+
+        <MudTd>
+            @if (context.ClassCount > 0)
+            {
+                <MudTooltip Text="Cannot delete — subject has sessions">
+                    <MudButton Disabled="true"
+                               Variant="Variant.Filled"
+                               Color="Color.Error"
+                               Size="Size.Small"
+                               EndIcon="@Icons.Material.Filled.Delete">
+                        Delete
+                    </MudButton>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Error"
+                           Size="Size.Small"
+                           OnClick="@(() => OnDelete.InvokeAsync(context.Id))"
+                           EndIcon="@Icons.Material.Filled.Delete">
+                    Delete
+                </MudButton>
+            }
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    [Parameter]
+    public List<SubjectSummaryDto> Subjects { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<Guid> OnEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnViewAttendance { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnExportExcel { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnSurvey { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDelete { get; set; }
+}

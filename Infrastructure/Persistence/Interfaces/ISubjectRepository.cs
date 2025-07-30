@@ -8,5 +8,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task<List<Subject>> GetAllAsync();
         Task<Subject?> GetByIdAsync(Guid id);
         Task AddAsync(Subject subject, AppDbContext context, CancellationToken ct = default);
+        Task UpdateAsync(Subject subject, AppDbContext context, CancellationToken ct = default);
     }
 }

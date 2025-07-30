@@ -1,0 +1,102 @@
+﻿@page "/subjects/edit/{SubjectId:guid}"
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Presentation.Pages.Validators
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+
+@inject GetSubjectByIdUseCase GetSubjectById
+@inject UpdateSubjectUseCase UpdateUseCase
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<title>Edit Subject</title>
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">Edit Subject</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (formModel is not null)
+    {
+        <MudForm Model="@formModel" @ref="form" @bind-IsValid="@success" Validator="validator.Validate">
+            <MudTextField @bind-Value="formModel.Title"
+                          Label="Subject Title"
+                          For="@(() => formModel.Title)"
+                          Required="true"
+                          OnBlur="@(() => SetTouched(nameof(formModel.Title)))"
+                          Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.Title))))" />
+
+            <MudTextField @bind-Value="formModel.Description"
+                          Label="Subject Description"
+                          For="@(() => formModel.Description)"
+                          Lines="4"
+                          OnBlur="@(() => SetTouched(nameof(formModel.Description)))"
+                          Validation="@(new Func<string, Task<IEnumerable<string>>>(val => validator.ConditionalValidateValue(HasTouched)(formModel, nameof(formModel.Description))))" />
+
+            <MudButton OnClick="HandleValidSubmit" Disabled="@(!success)">Save Changes</MudButton>
+        </MudForm>
+    }
+    else
+    {
+        <MudText Color="Color.Error">Subject not found.</MudText>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public Guid SubjectId { get; set; }
+
+    private CreateSubjectDto? formModel;
+    private CreateSubjectDtoFluentValidator validator = new();
+    private MudForm? form;
+    private bool success;
+    private bool isLoading = true;
+    private Dictionary<string, bool> touchedFields = new();
+
+    bool HasTouched(string fieldName) => touchedFields.TryGetValue(fieldName, out var touched) && touched;
+    void SetTouched(string fieldName) => touchedFields[fieldName] = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var dto = await GetSubjectById.ExecuteAsync(SubjectId);
+            if (dto is not null)
+            {
+                formModel = new CreateSubjectDto
+                {
+                    Title = dto.Title,
+                    Description = dto.Description
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Failed to load subject: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        await form.Validate();
+        if (!success || formModel is null) return;
+
+        try
+        {
+            await UpdateUseCase.ExecuteAsync(SubjectId, formModel);
+            Snackbar.Add("Subject updated successfully!", Severity.Success);
+            NavigationManager.NavigateTo("/subjects/manage-subjects");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Update failed: " + ex.Message, Severity.Error);
+        }
+    }
+}

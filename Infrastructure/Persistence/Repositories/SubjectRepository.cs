@@ -31,7 +31,12 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             await context.SaveChangesAsync(ct);
         }
 
-        // Optional methods for update and delete can be added similarly.
+        public async Task UpdateAsync(Subject subject, AppDbContext context, CancellationToken ct = default)
+        {
+            // Attach if not tracked
+            context.Subjects.Update(subject);
+            await context.SaveChangesAsync(ct);
+        }
     }
 }
 
