@@ -6,6 +6,7 @@
 @using MudBlazor
 
 @inject GetAllSubjectsUseCase GetSubjectsUseCase
+@inject DeleteSubjectUseCase DeleteSubjectUseCase
 @inject NavigationManager Nav
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -80,13 +81,13 @@
             return;
         }
 
-        // var confirmed = await ShowConfirmationDialog($"Delete subject '{subject.Title}'?");
-        // if (!confirmed)
-        //     return;
+        var confirmed = await ShowConfirmationDialog($"Delete subject '{subject.Title}'?");
+        if (!confirmed)
+            return;
 
         try
         {
-            // await DeleteSubjectUseCase.ExecuteAsync(subjectId); // implement this
+            await DeleteSubjectUseCase.ExecuteAsync(subjectId);
             Subjects.Remove(subject);
             Snackbar.Add("Subject deleted.", Severity.Success);
         }
@@ -109,10 +110,10 @@
         // DialogService.Show<SubjectAttendanceDialog>("View Attendance", parameters, options);
     }
 
-    // private async Task<bool> ShowConfirmationDialog(string message)
-    // {
-    //     var dialog = DialogService.Show<ConfirmationDialog>("Confirm", new DialogParameters { ["ContentText"] = message });
-    //     var result = await dialog.Result;
-    //     return !result.Canceled;
-    // }
+    private async Task<bool> ShowConfirmationDialog(string message)
+    {
+        var dialog = DialogService.Show<ConfirmationDialog>("Confirm", new DialogParameters { ["ContentText"] = message });
+        var result = await dialog.Result;
+        return !result.Canceled;
+    }
 }

@@ -37,6 +37,12 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             context.Subjects.Update(subject);
             await context.SaveChangesAsync(ct);
         }
+
+        public async Task DeleteAsync(Subject subject, AppDbContext context, CancellationToken ct = default)
+        {
+            context.Subjects.Remove(subject);
+            await context.SaveChangesAsync(ct);
+        }
     }
 }
 
