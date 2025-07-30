@@ -18,12 +18,9 @@
         {
             <MudPaper Class="p-4" Elevation="0">
                 <MudList T="string" Dense="true" Class="w-100">
-                    @for (int i = 0; i < Users.Count; i++)
+                    @foreach (var user in Users)
                     {
-                        var user = Users[i];
-                        var displayText = $"{i + 1}. {user.UserName}";
-
-                        <MudListItem Class="pl-2">@displayText</MudListItem>
+                        <MudListItem Text="@user.UserName" Icon="@Icons.Material.Filled.Person" />
                     }
                 </MudList>
             </MudPaper>
