@@ -173,7 +173,7 @@
                     FullWidth = true
                 };
 
-                DialogService.Show<ClassDetailsModal>("Class Details", parameters, options);
+                await DialogService.ShowAsync<ClassDetailsModal>("Class Details", parameters, options);
             }
             else
             {
