@@ -191,7 +191,7 @@
     {
         var parameters = new DialogParameters { ["SubjectId"] = subjectId };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
-        // DialogService.Show<SubjectAttendanceDialog>("View Attendance", parameters, options);
+        DialogService.Show<SubjectAttendanceDialog>("View Attendance", parameters, options);
     }
 
     private async Task<bool> ShowConfirmationDialog(string message)

@@ -1,0 +1,104 @@
+﻿@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.UseCases
+@inject GetAllClassesBySubjectIdUseCase GetAllClassesBySubjectIdUseCase
+@inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
+
+<MudDialog>
+    <DialogContent>
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (Classes == null || !Classes.Any())
+        {
+            <MudText>No classes found for this subject.</MudText>
+        }
+        else
+        {
+            <MudExpansionPanels MultiExpansion="true">
+                @foreach (var classItem in Classes)
+                {
+                    <MudExpansionPanel Text="@($"{classItem.ClassName} - {classItem.SessionName}")" 
+                                       ExpandedChanged="@(expanded => OnPanelExpanded(expanded, classItem.Id))">
+                        @if (IsUserLoading.TryGetValue(classItem.Id, out var loading) && loading)
+                        {
+                            <MudProgressCircular Indeterminate="true" />
+                        }
+                        else if (RegisteredUsers.TryGetValue(classItem.Id, out var users))
+                        {
+                            @if (users == null || users.Count == 0)
+                            {
+                                <MudText>No registered users found.</MudText>
+                            }
+                            else
+                            {
+                                <MudList T="String">
+                                    @foreach (var user in users)
+                                    {
+                                        <MudListItem>@user.UserName</MudListItem>
+                                    }
+                                </MudList>
+                            }
+                        }
+                    </MudExpansionPanel>
+                }
+            </MudExpansionPanels>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Close" Color="Color.Primary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public Guid SubjectId { get; set; }
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
+
+    private List<ClassSummaryDto> Classes;
+    private Dictionary<Guid, List<RegisteredUsersDto>> RegisteredUsers = new();
+    private Dictionary<Guid, bool> IsUserLoading = new();
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Classes = await GetAllClassesBySubjectIdUseCase.ExecuteAsync(SubjectId);
+        }
+        catch (Exception ex)
+        {
+            // optionally Snackbar if you inject it
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OnPanelExpanded(bool expanded, Guid classId)
+    {
+        if (!expanded || RegisteredUsers.ContainsKey(classId))
+            return;
+
+        IsUserLoading[classId] = true;
+
+        try
+        {
+            var users = await GetRegisteredUsersUseCase.ExecuteAsync(classId);
+            RegisteredUsers[classId] = users ?? new();
+        }
+        catch
+        {
+            RegisteredUsers[classId] = new(); // fallback to avoid null issues
+        }
+        finally
+        {
+            IsUserLoading[classId] = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Close() => MudDialog.Cancel();
+}
