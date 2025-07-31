@@ -16,7 +16,8 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 Id = s.Id,
                 Title = s.Title,
                 Description = s.Description,
-                ClassCount = s.Classes.Count
+                ClassCount = s.Classes.Count,
+                HasSurvey = s.Survey != null
             }).ToList();
         }
     }

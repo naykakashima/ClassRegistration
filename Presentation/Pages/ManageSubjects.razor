@@ -195,12 +195,12 @@
     {
         var parameters = new DialogParameters { ["SubjectId"] = subjectId };
         var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true };
-        DialogService.Show<SubjectAttendanceDialog>("View Attendance", parameters, options);
+        await DialogService.ShowAsync<SubjectAttendanceDialog>("View Attendance", parameters, options);
     }
 
     private async Task<bool> ShowConfirmationDialog(string message)
     {
-        var dialog = DialogService.Show<ConfirmationDialog>("Confirm", new DialogParameters { ["ContentText"] = message });
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm", new DialogParameters { ["ContentText"] = message });
         var result = await dialog.Result;
         return !result.Canceled;
     }

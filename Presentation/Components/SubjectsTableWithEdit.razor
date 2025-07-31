@@ -69,13 +69,30 @@
         </MudTd>
 
         <MudTd>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Tertiary"
-                       Size="Size.Small"
-                       OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
-                       EndIcon="@Icons.Material.Filled.Build">
-                Survey
-            </MudButton>
+            @if (context.HasSurvey == true)
+            {
+                <MudTooltip Text="Survey available">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Tertiary"
+                               Size="Size.Small"
+                               OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
+                               EndIcon="@Icons.Material.Filled.Build">
+                        Survey
+                    </MudButton>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudTooltip Text="No Survey Yet">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Tertiary"
+                               Size="Size.Small"
+                               OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
+                               EndIcon="@Icons.Material.Filled.Build">
+                        Survey
+                    </MudButton>
+                </MudTooltip>
+            }
         </MudTd>
 
         <MudTd>

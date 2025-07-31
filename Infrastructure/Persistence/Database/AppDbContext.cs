@@ -59,7 +59,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
 
                 entity.HasOne(c => c.Survey)
                       .WithOne(s => s.Class)
-                      .HasForeignKey<Class>(c => c.SurveyId)
+                      .HasForeignKey<ClassSurvey>(cs => cs.ClassId)
                       .OnDelete(DeleteBehavior.SetNull);
 
                 entity.Property(c => c.ClassName).IsRequired();
@@ -71,7 +71,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
             {
                 entity.HasOne(s => s.Survey)
                       .WithOne(sv => sv.Subject)
-                      .HasForeignKey<Subject>(s => s.SurveyId)
+                      .HasForeignKey<SubjectSurvey>(sv => sv.SubjectId)
                       .OnDelete(DeleteBehavior.SetNull);
 
                 entity.Property(s => s.Title).IsRequired();

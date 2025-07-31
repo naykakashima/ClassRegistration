@@ -6,5 +6,6 @@
         public required string Title { get; set; }
         public string? Description { get; set; }
         public int ClassCount { get; set; }
+        public bool HasSurvey { get; set; }
     }
 }

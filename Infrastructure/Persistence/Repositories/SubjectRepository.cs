@@ -14,6 +14,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
         {
             return await _db.Subjects
                 .Include(s => s.Classes)
+                .Include(s => s.Survey)
                 .ToListAsync();
         }
 
