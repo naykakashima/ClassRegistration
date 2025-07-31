@@ -72,7 +72,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Database
                 entity.HasOne(s => s.Survey)
                       .WithOne(sv => sv.Subject)
                       .HasForeignKey<SubjectSurvey>(sv => sv.SubjectId)
-                      .OnDelete(DeleteBehavior.SetNull);
+                      .OnDelete(DeleteBehavior.Restrict);
 
                 entity.Property(s => s.Title).IsRequired();
             });
