@@ -6,57 +6,55 @@ using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 
 namespace ClassRegistrationApplication2025.Application.Services
 {
-    public class SurveyService : ISurveyService
+    public class SubjectSurveyService : ISubjectSurveyService
     {
         private readonly ISurveyRepository _surveyRepository;
-        private readonly AppDbContext _context;
 
-        public SurveyService(ISurveyRepository surveyRepository, AppDbContext context)
+        public SubjectSurveyService(ISurveyRepository surveyRepository)
         {
             _surveyRepository = surveyRepository;
-            _context = context;
         }
 
-        public async Task<List<SurveyDto>> GetAllAsync()
+        public async Task<List<SubjectSurveyDto>> GetAllAsync()
         {
-            var surveys = await _surveyRepository.GetAllAsync();
+            var surveys = await _surveyRepository.GetAllSubjectSurveysAsync();
             return surveys.ConvertAll(MapToDto);
         }
 
-        public async Task<SurveyDto?> GetByIdAsync(Guid id)
+        public async Task<SubjectSurveyDto?> GetByIdAsync(Guid id)
         {
             var survey = await _surveyRepository.GetByIdAsync(id);
-            return survey == null ? null : MapToDto(survey);
+            return survey is SubjectSurvey subjectSurvey ? MapToDto(subjectSurvey) : null;
         }
 
-        public async Task<SurveyDto?> GetBySubjectIdAsync(Guid subjectId)
+        public async Task<SubjectSurveyDto?> GetBySubjectIdAsync(Guid subjectId)
         {
             var survey = await _surveyRepository.GetBySubjectIdAsync(subjectId);
             return survey == null ? null : MapToDto(survey);
         }
 
-        public async Task AddAsync(SurveyDto dto)
+        public async Task AddAsync(SubjectSurveyDto dto)
         {
             var survey = MapToEntity(dto);
-            await _surveyRepository.AddAsync(survey, _context, CancellationToken.None);
+            await _surveyRepository.AddAsync(survey, CancellationToken.None);
         }
 
-        public async Task UpdateAsync(SurveyDto dto)
+        public async Task UpdateAsync(SubjectSurveyDto dto)
         {
             var survey = MapToEntity(dto);
-            await _surveyRepository.UpdateAsync(survey, _context, CancellationToken.None);
+            await _surveyRepository.UpdateAsync(survey, CancellationToken.None);
         }
 
         public async Task DeleteAsync(Guid id)
         {
-            await _surveyRepository.DeleteAsync(id, _context, CancellationToken.None);
+            await _surveyRepository.DeleteAsync(id, CancellationToken.None);
         }
 
         // Mapping helpers
 
-        private SurveyDto MapToDto(Survey entity)
+        private SubjectSurveyDto MapToDto(SubjectSurvey entity)
         {
-            return new SurveyDto
+            return new SubjectSurveyDto
             {
                 Id = entity.Id,
                 Title = entity.Title,
@@ -68,9 +66,9 @@ namespace ClassRegistrationApplication2025.Application.Services
             };
         }
 
-        private Survey MapToEntity(SurveyDto dto)
+        private SurveyBase MapToEntity(SubjectSurveyDto dto)
         {
-            return new Survey
+            return new SubjectSurvey
             {
                 Id = dto.Id == Guid.Empty ? Guid.NewGuid() : dto.Id,
                 Title = dto.Title,

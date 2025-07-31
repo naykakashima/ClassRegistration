@@ -13,7 +13,7 @@ namespace ClassRegistrationApplication2025.Domain.Entities
 
         public List<Class> Classes { get; set; } = new();
         public Guid? SurveyId { get; set; }
-        public Survey? Survey { get; set; }
+        public SubjectSurvey? Survey { get; set; }
 
     }
 }

@@ -5,16 +5,17 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 {
     public interface ISurveyRepository
     {
-        Task AddAsync(Survey newSurvey, AppDbContext context, CancellationToken ct);
+        Task<SurveyBase?> GetByIdAsync(Guid surveyId);
 
-        Task<Survey?> GetByIdAsync(Guid surveyId);
+        Task<List<SurveyBase>> GetAllAsync();
+        Task AddAsync(SurveyBase newSurvey, CancellationToken ct);
+        Task UpdateAsync(SurveyBase survey, CancellationToken ct);
+        Task DeleteAsync(Guid surveyId, CancellationToken ct);
 
-        Task<List<Survey>> GetAllAsync();
+        Task<List<SubjectSurvey>> GetAllSubjectSurveysAsync();
+        Task<SubjectSurvey?> GetBySubjectIdAsync(Guid subjectId);
 
-        Task<Survey?> GetBySubjectIdAsync(Guid subjectId);
-
-        Task UpdateAsync(Survey survey, AppDbContext context, CancellationToken ct);
-
-        Task DeleteAsync(Guid surveyId, AppDbContext context, CancellationToken ct);
+        Task<List<ClassSurvey>> GetAllClassSurveysAsync();
+        Task<ClassSurvey?> GetByClassIdAsync(Guid classId);
     }
 }

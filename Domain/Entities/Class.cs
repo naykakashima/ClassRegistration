@@ -20,7 +20,7 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public Guid SubjectId { get; set; }
         public Subject Subject { get; set; }
         public Guid? SurveyId { get; set; }
-        public Survey? Survey { get; set; }
+        public ClassSurvey? Survey { get; set; }
 
     }
 

@@ -2,8 +2,8 @@
 
 namespace ClassRegistrationApplication2025.Domain.Entities
 {
-    public class Survey
-    {
+    public class SurveyBase
+    {   
         public Guid Id { get; set; }
 
         [Required]
@@ -18,10 +18,5 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public User CreatedByUser { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // Optional reverse nav props
-        public Class? Class { get; set; }
-        public Guid? SubjectId { get; set; }
-        public Subject? Subject { get; set; }
     }
 }

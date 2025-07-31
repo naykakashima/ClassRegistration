@@ -8,7 +8,7 @@
 @using global::SurveyBuilder.Services
 @using MudBlazor
 
-@inject ISurveyService SurveyService
+@inject ISubjectSurveyService SurveyService
 @inject NavigationManager Nav
 @inject ISurveyJsonService JsonService
 @inject IHttpContextAccessor _http
@@ -35,7 +35,7 @@
 
 @code {
     [Parameter] public Guid subjectId { get; set; }
-    private SurveyDto Survey = new SurveyDto();
+    private SubjectSurveyDto Survey = new SubjectSurveyDto();
 
     private string? _currentUserId;
 

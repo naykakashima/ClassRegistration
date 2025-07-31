@@ -5,56 +5,75 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 {
-
-    namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
+    public class SurveyRepository : ISurveyRepository
     {
-        public class SurveyRepository : ISurveyRepository
+        private readonly AppDbContext _db;
+
+        public SurveyRepository(AppDbContext db)
         {
-            private readonly AppDbContext _db;
+            _db = db;
+        }
 
-            public SurveyRepository(AppDbContext db)
-            {
-                _db = db;
-            }
+        public async Task AddAsync(SurveyBase newSurvey, CancellationToken ct)
+        {
+            _db.Surveys.Add(newSurvey);
+            await _db.SaveChangesAsync(ct);
+        }
 
-            public async Task AddAsync(Survey newSurvey, AppDbContext context, CancellationToken ct)
-            {
-                context.Surveys.Add(newSurvey);
-                await context.SaveChangesAsync(ct);
-            }
+        public async Task<List<SurveyBase>> GetAllAsync()
+        {
+            return await _db.Surveys.ToListAsync();
+        }
 
-            public async Task<List<Survey>> GetAllAsync()
-            {
-                return await _db.Surveys.ToListAsync();
-            }
+        public async Task<SurveyBase?> GetByIdAsync(Guid surveyId)
+        {
+            return await _db.Surveys.FindAsync(surveyId);
+        }
 
-            public async Task<Survey?> GetByIdAsync(Guid surveyId)
-            {
-                return await _db.Surveys.FindAsync(surveyId);
-            }
+        public async Task UpdateAsync(SurveyBase survey, CancellationToken ct)
+        {
+            _db.Surveys.Update(survey);
+            await _db.SaveChangesAsync(ct);
+        }
 
-            public async Task<Survey?> GetBySubjectIdAsync(Guid subjectId)
+        public async Task DeleteAsync(Guid surveyId, CancellationToken ct)
+        {
+            var surveyToDelete = await _db.Surveys.FindAsync(surveyId);
+            if (surveyToDelete != null)
             {
-                return await _db.Surveys.FirstOrDefaultAsync(s => s.Subject != null && s.Subject.Id == subjectId);
-                // SubjectId foreign key property in Survey, do:
-                // return await _db.Surveys.FirstOrDefaultAsync(s => s.SubjectId == subjectId);
+                _db.Surveys.Remove(surveyToDelete);
+                await _db.SaveChangesAsync(ct);
             }
+        }
 
-            public async Task UpdateAsync(Survey survey, AppDbContext context, CancellationToken ct)
-            {
-                context.Surveys.Update(survey);
-                await context.SaveChangesAsync(ct);
-            }
+        public async Task<List<SubjectSurvey>> GetAllSubjectSurveysAsync()
+        {
+            return await _db.Surveys
+                .OfType<SubjectSurvey>()
+                .Include(s => s.Subject)
+                .ToListAsync();
+        }
 
-            public async Task DeleteAsync(Guid surveyId, AppDbContext context, CancellationToken ct)
-            {
-                var surveyToDelete = await context.Surveys.FindAsync(surveyId);
-                if (surveyToDelete != null)
-                {
-                    context.Surveys.Remove(surveyToDelete);
-                    await context.SaveChangesAsync(ct);
-                }
-            }
+        public async Task<SubjectSurvey?> GetBySubjectIdAsync(Guid subjectId)
+        {
+            return await _db.Surveys
+                .OfType<SubjectSurvey>()
+                .FirstOrDefaultAsync(s => s.SubjectId == subjectId);
+        }
+
+        public async Task<List<ClassSurvey>> GetAllClassSurveysAsync()
+        {
+            return await _db.Surveys
+                .OfType<ClassSurvey>()
+                .Include(s => s.Class)
+                .ToListAsync();
+        }
+
+        public async Task<ClassSurvey?> GetByClassIdAsync(Guid classId)
+        {
+            return await _db.Surveys
+                .OfType<ClassSurvey>()
+                .FirstOrDefaultAsync(s => s.ClassId == classId);
         }
     }
 
