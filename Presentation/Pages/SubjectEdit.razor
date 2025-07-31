@@ -56,7 +56,7 @@
     [Parameter] public Guid SubjectId { get; set; }
 
     private SubjectSummaryDto? Subject;
-    private List<ClassSummaryDto> FilteredClasses = new();
+    // private List<ClassSummaryDto> FilteredClasses = new();
     private bool IsLoading = true;
 
     private List<ClassSummaryDto> classes = new();
@@ -115,8 +115,14 @@
     private void NavigateToSurvey(Guid classId)
     {
         InvokeAsync(() =>
-            NavigationManager.NavigateTo($"/createsurvey/{classId}")
-        );
+        {
+            var selectedClass = classes.FirstOrDefault(s => s.Id == classId);
+            if (selectedClass is null) return;
+
+            var slugTitle = Slugify(selectedClass.ClassName);
+            NavigationManager.NavigateTo($"/subjects/{SubjectId}/classes-manage/{classId}/{slugTitle}");
+
+        });
     }
 
     private async Task ShowRegisteredUsersModal(Guid classId)
@@ -196,5 +202,10 @@
                 Snackbar.Add($"Failed to export Excel: {ex.Message}", Severity.Error);
             }
         });
+    }
+
+    public static string Slugify(string title)
+    {
+        return title.ToLower().Replace(" ", "-").Replace("&", "and");
     }
 }

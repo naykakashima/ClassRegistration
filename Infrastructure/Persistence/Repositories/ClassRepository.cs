@@ -57,6 +57,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Classes
                 .Where(c => c.SubjectId == subjectId)
                 .Include(c => c.Registrations) // Optional: preload
+                .Include(c => c.Survey) 
                 .ToListAsync();
         }
 

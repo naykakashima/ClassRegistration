@@ -2,7 +2,7 @@
 @using ClassRegistrationApplication2025.Domain.Enums
 @using MudBlazor
 
-<MudTable Items="Subjects" Hover="true" Bordered="true" Dense="true" SortLabel="Sort By">
+<MudTable Items="Subjects" Hover="true" Bordered="true" Dense="true" SortLabel="Sort By" >
     <HeaderContent>
         <MudTh>
             <MudTableSortLabel SortBy="@(new Func<SubjectSummaryDto, object>(x => x.Title))" InitialDirection="SortDirection.Ascending">
@@ -35,7 +35,7 @@
 
         <MudTd>
             <MudButton Variant="Variant.Filled"
-                       Color="Color.Secondary"
+                       Color="Color.Tertiary"
                        Size="Size.Small"
                        OnClick="@(() => OnViewAttendance.InvokeAsync(context.Id))"
                        EndIcon="@Icons.Material.Filled.People">
@@ -73,11 +73,11 @@
             {
                 <MudTooltip Text="Survey available">
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Tertiary"
+                               Color="Color.Secondary"
                                Size="Size.Small"
                                OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
                                EndIcon="@Icons.Material.Filled.Build">
-                        Survey
+                        Survey Builder
                     </MudButton>
                 </MudTooltip>
             }
@@ -85,11 +85,11 @@
             {
                 <MudTooltip Text="No Survey Yet">
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Tertiary"
+                               Color="Color.Secondary"
                                Size="Size.Small"
                                OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
                                EndIcon="@Icons.Material.Filled.Build">
-                        Survey
+                        Survey Builder
                     </MudButton>
                 </MudTooltip>
             }

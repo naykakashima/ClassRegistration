@@ -1,0 +1,90 @@
+﻿@page "/subjects/{SubjectId:guid}/classes-manage/{classId:guid}/{classTitle}"
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@using SurveyBuilder.Components
+@using SurveyBuilder.Models
+@using SurveyBuilder.Services
+
+
+@inject IClassSurveyService SurveyService
+@inject NavigationManager Nav
+@inject ISurveyJsonService JsonService
+@inject IHttpContextAccessor _http
+@inject AuthenticationStateProvider AuthProvider
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+
+<Microsoft.AspNetCore.Components.Web.PageTitle> Survey Builder For Subject </Microsoft.AspNetCore.Components.Web.PageTitle>
+
+<MudStack Row="true">
+    <MudText> Survey Builder: @classTitle </MudText>
+</MudStack>
+
+<SurveyBuilder SurveyChanged="@OnSurveyChanged" />
+
+<MudStack Class="d-flex justify-center mt-4">
+    <MudButton OnClick="SaveToDb" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" StartIcon="@Icons.Material.Filled.Save">
+        Save Survey
+    </MudButton>
+</MudStack>
+
+@code {
+    [Parameter] public Guid classId { get; set; }
+    [Parameter] public string classTitle { get; set; }
+    [Parameter] public Guid SubjectId { get; set; }
+    private ClassSurveyDto Survey = new ClassSurveyDto();
+
+    private string? _currentUserId;
+
+    private string Serialized = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        if (!string.IsNullOrWhiteSpace(_currentUserId))
+        {
+            var currentUser = await UserService.GetOrCreateCurrentUserAsync(_currentUserId);
+            Survey.CreatedByUserId = currentUser.Id;
+        }
+
+        Survey.Id = Guid.NewGuid(); // ensure it's set early
+        Survey.ClassId = classId;
+        Survey.CreatedAt = DateTime.UtcNow;
+    }
+
+    private Task OnSurveyChanged(SurveyModel survey)
+    {
+        Serialized = JsonService.Serialize(survey);
+        Survey.JsonDefinition = Serialized;
+
+        Survey.Title = survey.Title;
+        Survey.Description = survey.Description;
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveToDb()
+    {
+        if (string.IsNullOrWhiteSpace(Survey.Title) || string.IsNullOrWhiteSpace(Survey.JsonDefinition))
+        {
+            Snackbar.Add("Survey title and definition are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await SurveyService.AddAsync(Survey);
+            Snackbar.Add("Survey successfully saved!", Severity.Success);
+            Nav.NavigateTo($"/subjects/{SubjectId}/edit");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving survey: {ex.Message}", Severity.Error);
+        }
+    }
+}

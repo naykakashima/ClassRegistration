@@ -14,5 +14,6 @@ namespace ClassRegistrationApplication2025.Application.DTOs
         public int MaxSlots { get; set; }
         public int RegisteredCount { get; set; }
         public ClassStatus Status { get; set; }
+        public bool HasSurvey { get; set; }
     }
 }

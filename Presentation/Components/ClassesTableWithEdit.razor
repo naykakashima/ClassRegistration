@@ -44,13 +44,15 @@
             </MudButton>
         </MudTd>
         <MudTd DataLabel="Survey">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Secondary"
-                       Size="Size.Small"
-                       OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
-                       EndIcon="@Icons.Material.Filled.Build">
-                Survey Builder
-            </MudButton>
+            <MudTooltip Text="@((context.HasSurvey ? "Survey available" : "No Survey Yet"))">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           Size="Size.Small"
+                           OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
+                           EndIcon="@Icons.Material.Filled.Build">
+                    Survey Builder
+                </MudButton>
+            </MudTooltip>
         </MudTd>
         <MudTd DataLabel="Edit Class">
             <MudButton Variant="Variant.Filled"

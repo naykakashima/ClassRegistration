@@ -28,8 +28,10 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 EndTime = c.EndTime,
                 MaxSlots = c.MaxSlots,
                 RegisteredCount = c.Registrations.Count, // Or a query count
-                Status = c.Status
+                Status = c.Status,
+                HasSurvey = c.Survey != null
             }).ToList();
         }
     }
 }
+    
