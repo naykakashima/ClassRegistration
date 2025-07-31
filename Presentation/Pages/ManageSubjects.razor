@@ -75,7 +75,9 @@
 
     private void HandleSurvey(Guid subjectId)
     {
-        Nav.NavigateTo($"/subjects/{subjectId}/survey");
+        var subject = Subjects.FirstOrDefault(s => s.Id == subjectId);
+        var slugTitle = Slugify(subject.Title);
+        Nav.NavigateTo($"/subjects/{subjectId}/survey/{slugTitle}");
     }
 
     private async Task HandleDelete(Guid subjectId)
@@ -201,5 +203,10 @@
         var dialog = DialogService.Show<ConfirmationDialog>("Confirm", new DialogParameters { ["ContentText"] = message });
         var result = await dialog.Result;
         return !result.Canceled;
+    }
+
+    public static string Slugify(string title)
+    {
+        return title.ToLower().Replace(" ", "-").Replace("&", "and");
     }
 }

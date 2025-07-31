@@ -1,4 +1,4 @@
-﻿@page "/subjects/{subjectId:guid}/survey"
+﻿@page "/subjects/{subjectId:guid}/survey/{subjectTitle}"
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.Interfaces
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
@@ -17,24 +17,23 @@
 @inject ISnackbar Snackbar
 
 
-<h3>Create/Edit Survey</h3>
+<Microsoft.AspNetCore.Components.Web.PageTitle> Survey Builder For Subject </Microsoft.AspNetCore.Components.Web.PageTitle>
 
-<MudTextField @bind-Value="Survey.Title" Label="Survey Title" FullWidth="true" />
-<MudTextField @bind-Value="Survey.Description" Label="Description" FullWidth="true" />
+<MudStack Row="true">
+    <MudText> Survey Builder: @subjectTitle </MudText>
+</MudStack>
 
 <SurveyBuilder SurveyChanged="@OnSurveyChanged" />
 
-<MudText Typo="Typo.subtitle2" Class="mt-4">Serialized Output:</MudText>
-<MudTextField @bind-Value="Serialized" Lines="20" FullWidth="true" ReadOnly="true" />
-
 <MudStack Class="d-flex justify-center mt-4">
     <MudButton OnClick="SaveToDb" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" StartIcon="@Icons.Material.Filled.Save">
-        Save to DB
+        Save Survey
     </MudButton>
 </MudStack>
 
 @code {
     [Parameter] public Guid subjectId { get; set; }
+    [Parameter] public string subjectTitle { get; set; }
     private SubjectSurveyDto Survey = new SubjectSurveyDto();
 
     private string? _currentUserId;
@@ -61,6 +60,10 @@
     {
         Serialized = JsonService.Serialize(survey);
         Survey.JsonDefinition = Serialized;
+
+        Survey.Title = survey.Title;
+        Survey.Description = survey.Description;
+
         return Task.CompletedTask;
     }
 
