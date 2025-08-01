@@ -16,10 +16,12 @@
 
 @inject GetClassDetailsUseCase GetClassDetailsUseCase
 @inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
+@inject GetAllSubjectsUseCase GetAllSubjectsUseCase
 @inject RegisterForClassUseCase RegisterUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
 @inject GetAllClassesUseCase GetAllClassesUseCase
+@inject GetSubjectIdFromClassIdUseCase GetSubjectIdFromClassIdUseCase
 @using static System.Net.WebRequestMethods
 @inject IUserService UserService
 @inject ISnackbar Snackbar
@@ -47,13 +49,14 @@
         }
         else
         {
-            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurvey="NavigateToSurvey" OnViewUsers="ShowRegisteredUsersModal" OnDownloadExcel="ExportExcel" />
+            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurveyCreate="NavigateToSurveyCreate" OnSurveyEdit="NavigateToSurveyEdit" OnViewUsers="ShowRegisteredUsersModal" OnDownloadExcel="ExportExcel" />
         }
     </MudContainer>
 </CascadingAuthenticationState>
 
 @code {
     private List<ClassSummaryDto> classes = new();
+    private List<SubjectSummaryDto>? _subjects;
     private UserDto currentUser;
     private bool isLoading = true;
     private string? _currentUserId;
@@ -66,6 +69,7 @@
             var authState = await AuthProvider.GetAuthenticationStateAsync();
             var userId = authState.User.Identity?.Name?.Split('\\').Last();
             _currentUserId = authState.User.Identity?.Name?.Split('\\').Last();
+            _subjects = await GetAllSubjectsUseCase.ExecuteAsync();
 
             currentUser = await UserService.GetOrCreateCurrentUserAsync(userId);
             classes = await GetAllClassesUseCase.ExecuteAsync();
@@ -97,11 +101,45 @@
         );
     }
 
-    private void NavigateToSurvey(Guid classId)
+    private async Task NavigateToSurveyCreate(Guid classId)
     {
-        InvokeAsync(() =>
-            NavigationManager.NavigateTo($"/createsurvey/{classId}")
-        );
+        await InvokeAsync( async () =>
+        {
+            var selectedClass = classes.FirstOrDefault(s => s.Id == classId);
+            if (selectedClass is null) return;
+
+            var subjectId = await GetSubjectIdFromClassIdUseCase.ExecuteAsync(classId);
+            if (subjectId is null)
+            {
+                Snackbar.Add("Unable to find subject for class.", Severity.Warning);
+                return;
+            }
+
+            var slugTitle = Slugify(selectedClass.ClassName);
+
+            NavigationManager.NavigateTo($"/subjects/{subjectId}/classes-manage/{classId}/createsurvey/{slugTitle}");
+
+        });
+    }
+
+    private async Task NavigateToSurveyEdit(Guid classId)
+    {
+        await InvokeAsync( async () =>
+        {
+            var selectedClass = classes.FirstOrDefault(s => s.Id == classId);
+            if (selectedClass is null) return;
+
+            var subjectId = await GetSubjectIdFromClassIdUseCase.ExecuteAsync(classId);
+            if (subjectId is null)
+            {
+                Snackbar.Add("Unable to find subject for class.", Severity.Warning);
+                return;
+            }
+
+            var slugTitle = Slugify(selectedClass.ClassName);
+            NavigationManager.NavigateTo($"/subjects/{subjectId}/classes-manage/{classId}/editsurvey/{slugTitle}");
+
+        });
     }
 
     private async Task ShowRegisteredUsersModal(Guid classId)
@@ -181,6 +219,11 @@
                 Snackbar.Add($"Failed to export Excel: {ex.Message}", Severity.Error);
             }
         });
+    }
+
+    public static string Slugify(string title)
+    {
+        return title.ToLower().Replace(" ", "-").Replace("&", "and");
     }
 
 

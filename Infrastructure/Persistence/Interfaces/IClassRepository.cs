@@ -11,7 +11,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task<Class> GetClassWithRegistrationsAsync(Guid classId, CancellationToken ct = default);
         Task DeleteClassAsync(Guid classId, AppDbContext context, CancellationToken ct);
         Task<List<Class>> GetClassesBySubjectIdAsync(Guid subjectId);
-
-
+        Task<Guid?> GetSubjectIdByClassIdAsync(Guid classId);
     }
 }

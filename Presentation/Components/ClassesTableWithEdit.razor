@@ -110,6 +110,9 @@
     public List<ClassSummaryDto> Classes { get; set; } = new();
 
     [Parameter]
+    public Guid subjectId { get; set; }
+
+    [Parameter]
     public EventCallback<Guid> OnEdit { get; set; }
     [Parameter]
     public EventCallback<Guid> OnSurveyCreate { get; set; }

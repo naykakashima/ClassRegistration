@@ -61,5 +61,14 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 .ToListAsync();
         }
 
+        public async Task<Guid?> GetSubjectIdByClassIdAsync(Guid classId)
+        {
+            return await _db.Classes
+                .Where(c => c.Id == classId)
+                .Select(c => (Guid?)c.SubjectId)
+                .FirstOrDefaultAsync();
+        }
+
+
     }
 }
