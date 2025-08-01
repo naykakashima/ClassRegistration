@@ -35,7 +35,8 @@
     {
         <SubjectsTableWithEdit Subjects="Subjects"
                                OnEdit="HandleEdit"
-                               OnSurvey="HandleSurvey"
+                               OnSurveyCreate="HandleSurveyCreate"
+                               OnSurveyEdit="HandleSurveyEdit"
                                OnDelete="HandleDelete"
                                OnExportExcel="HandleExport"
                                OnViewAttendance="HandleAttendance" />
@@ -73,12 +74,20 @@
         Nav.NavigateTo($"/subjects/edit/{subjectId}");
     }
 
-    private void HandleSurvey(Guid subjectId)
+    private void HandleSurveyCreate(Guid subjectId)
     {
         var subject = Subjects.FirstOrDefault(s => s.Id == subjectId);
         var slugTitle = Slugify(subject.Title);
         Nav.NavigateTo($"/subjects/{subjectId}/survey/{slugTitle}");
     }
+
+    private void HandleSurveyEdit(Guid subjectId)
+    {
+        var subject = Subjects.FirstOrDefault(s => s.Id == subjectId);
+        var slugTitle = Slugify(subject.Title);
+        Nav.NavigateTo($"/subjects/{subjectId}/survey/edit/{slugTitle}");
+    }
+
 
     private async Task HandleDelete(Guid subjectId)
     {

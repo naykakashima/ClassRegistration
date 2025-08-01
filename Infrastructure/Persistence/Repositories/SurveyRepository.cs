@@ -30,9 +30,21 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Surveys.FindAsync(surveyId);
         }
 
-        public async Task UpdateAsync(SurveyBase survey, CancellationToken ct)
+        public async Task UpdateAsync(SurveyBase updatedSurvey, CancellationToken ct)
         {
-            _db.Surveys.Update(survey);
+            var existing = await _db.Surveys
+                .OfType<SubjectSurvey>()
+                .FirstOrDefaultAsync(s => s.Id == updatedSurvey.Id, ct);
+
+            if (existing == null)
+                throw new Exception("Survey not found.");
+
+            // Manual patch
+            existing.Title = updatedSurvey.Title;
+            existing.Description = updatedSurvey.Description;
+            existing.JsonDefinition = updatedSurvey.JsonDefinition;
+            existing.SubjectId = ((SubjectSurvey)updatedSurvey).SubjectId;
+
             await _db.SaveChangesAsync(ct);
         }
 

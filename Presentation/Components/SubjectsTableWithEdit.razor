@@ -14,7 +14,7 @@
         <MudTh>Edit</MudTh>
         <MudTh>Attendance</MudTh>
         <MudTh>Export Excel</MudTh>
-        <MudTh>Survey</MudTh>
+        <MudTh>Survey Builder</MudTh>
         <MudTh>Delete</MudTh>
     </HeaderContent>
 
@@ -75,7 +75,7 @@
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Secondary"
                                Size="Size.Small"
-                               OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
+                               OnClick="@(() => OnSurveyEdit.InvokeAsync(context.Id))"
                                EndIcon="@Icons.Material.Filled.Build">
                         Survey Builder
                     </MudButton>
@@ -87,7 +87,7 @@
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Secondary"
                                Size="Size.Small"
-                               OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
+                               OnClick="@(() => OnSurveyCreate.InvokeAsync(context.Id))"
                                EndIcon="@Icons.Material.Filled.Build">
                         Survey Builder
                     </MudButton>
@@ -136,7 +136,10 @@
     public EventCallback<Guid> OnExportExcel { get; set; }
 
     [Parameter]
-    public EventCallback<Guid> OnSurvey { get; set; }
+    public EventCallback<Guid> OnSurveyCreate { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnSurveyEdit { get; set; }
 
     [Parameter]
     public EventCallback<Guid> OnDelete { get; set; }
