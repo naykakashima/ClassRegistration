@@ -13,7 +13,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task<List<Guid>> GetClassIdsByUserAsync(Guid userId);
         Task<List<Registration>> GetRegistrationsByClassAsync(Guid classId);
         Task UpdateAttendanceAsync(List<AttendanceUpdateDto> updates, CancellationToken ct);
-
-
+        Task<List<Registration>> GetRegistrationsByUserIdAsync(Guid userId, CancellationToken ct);
     }
 }

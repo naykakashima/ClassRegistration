@@ -186,7 +186,7 @@
     {
         try
         {
-            await DeleteClassUseCase.ExecuteAsync(ClassId, formModel);
+            await DeleteClassUseCase.ExecuteAsync(ClassId, _currentUserId);
             Snackbar.Add("Class successfully deleted!", Severity.Success);
             NavigationManager.NavigateTo($"/subjects/{SubjectId}");
         }

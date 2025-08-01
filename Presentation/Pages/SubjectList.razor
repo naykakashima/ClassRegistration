@@ -12,6 +12,7 @@
 @inject GetAllClassesUseCase GetAllClassesUseCase
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager NavigationManager
+@inject GetAllClassesBySubjectIdUseCase getAllClassesBySubjectIdUseCase
 @inject IUserService UserService
 @inject IRegistrationRepository RegistrationRepository
 @inject IClassRepository ClassRepo
@@ -116,8 +117,7 @@
                 }
             }
 
-            var subject = await SubjectRepo.GetByIdAsync(SubjectId);
-            SubjectTitle = subject?.Title ?? "Unknown Subject";
+            var subject = await getAllClassesBySubjectIdUseCase.ExecuteAsync(SubjectId);
 
             var all = await ClassRepo.GetAllAsync();
             var filtered = all.Where(c => c.SubjectId == SubjectId);

@@ -1,0 +1,85 @@
+﻿@page "/surveysavailable"
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject IGetAvailableClassSurveysForUserUseCase UseCase
+@inject IUserService CurrentUser 
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+
+<title>Available Surveys</title>
+
+<CascadingAuthenticationState>
+
+    <MudContainer Class="mt-6">
+
+        @if (isLoading)
+        {
+            <MudProgressCircular Indeterminate="true" />
+        }
+        else if (!AvailableSurveys.Any())
+        {
+            <MudText>No surveys available for you right now.</MudText>
+        }
+        else
+        {
+            <MudTable Items="AvailableSurveys" Dense="true">
+                <HeaderContent>
+                    <MudTh>Title</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Created</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Title</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>@context.CreatedAt.ToShortDateString()</MudTd>
+                    <MudTd>
+                        <MudButton Size="Size.Small" OnClick="@(() => GoToFillSurvey(context.Id))">
+                            Fill
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudContainer>
+</CascadingAuthenticationState>
+
+@code {
+    private List<ClassSurveyDto> AvailableSurveys = new();
+    private UserDto currentUser;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userIdString = authState.User.Identity?.Name?.Split('\\').Last();
+
+            if (!string.IsNullOrEmpty(userIdString))
+            {
+                currentUser = await CurrentUser.GetOrCreateCurrentUserAsync(userIdString);
+                AvailableSurveys = await UseCase.ExecuteAsync(currentUser.Id, default);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load surveys: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    void GoToFillSurvey(Guid id)
+    {
+        Nav.NavigateTo($"/surveys/fill/{id}");
+    }
+}

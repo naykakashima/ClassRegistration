@@ -1,10 +1,10 @@
 ﻿using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Domain.Enums;
-using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
-
-using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClassRegistrationApplication2025.Application.UseCases
 {
@@ -12,20 +12,22 @@ namespace ClassRegistrationApplication2025.Application.UseCases
     {
         private readonly IClassRepository _classRepo;
         private readonly IUserService _userService;
-        private readonly IDbContextFactory<AppDbContext> _contextFactory;
+        private readonly ISubjectRepository _subjectRepo;
 
-        public CreateClassUseCase(IClassRepository classRepo, IUserService userService, IDbContextFactory<AppDbContext> contextFactory)
+        public CreateClassUseCase(
+            IClassRepository classRepo,
+            IUserService userService,
+            ISubjectRepository subjectRepo)
         {
             _classRepo = classRepo;
             _userService = userService;
-            _contextFactory = contextFactory;
+            _subjectRepo = subjectRepo;
         }
 
         public async Task ExecuteAsync(CreateClassDto dto, string adUserId, CancellationToken ct = default)
         {
-            using var context = _contextFactory.CreateDbContext();
-
-            var user = await context.Users.FirstOrDefaultAsync(u => u.UserID == adUserId);
+            // Get user via UserService (which should also be using DbContextFactory)
+            var user = await _userService.GetUserByAdUserIdAsync(adUserId, ct);
             if (user == null)
                 throw new Exception("User not found");
 
@@ -35,7 +37,8 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             if (dto.Date == null || dto.StartTime == null || dto.EndTime == null)
                 throw new ArgumentException("Date and time fields are required.");
 
-            var subject = await context.Subjects.FirstOrDefaultAsync(s => s.Id == dto.SubjectId, ct);
+            // Get subject via SubjectRepository
+            var subject = await _subjectRepo.GetByIdAsync(dto.SubjectId, ct);
             if (subject == null)
                 throw new Exception("Subject not found");
 
@@ -51,12 +54,12 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 MaxSlots = dto.MaxSlots,
                 Status = ClassStatus.Open,
                 CreatedByUserId = user.Id,
-                CreatedByUser = user,
-                SubjectId = subject.Id,
-                Subject = subject
+                SubjectId = subject.Id
+                // Note: We don't set navigation properties here
             };
 
-            await _classRepo.AddAsync(newClass, context, ct);
+            // Use the standard AddAsync method
+            await _classRepo.AddAsync(newClass, ct);
         }
     }
 }

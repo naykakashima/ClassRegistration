@@ -3,34 +3,34 @@ using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 {
     public class RegistrationRepository : IRegistrationRepository
     {
-        private readonly AppDbContext _db;
+        private readonly IDbContextFactory<AppDbContext> _contextFactory;
 
-        public RegistrationRepository(AppDbContext db)
+        public RegistrationRepository(IDbContextFactory<AppDbContext> contextFactory)
         {
-            _db = db;
+            _contextFactory = contextFactory;
         }
 
         public async Task<int> GetRegistrationCountByClassAsync(Guid classId)
         {
-            return await _db.Registrations.CountAsync(r => r.ClassId == classId);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Registrations.CountAsync(r => r.ClassId == classId);
         }
 
         public async Task<bool> ExistsAsync(Guid classId, Guid userId)
         {
-            return await _db.Registrations.AnyAsync(r => r.ClassId == classId && r.UserId == userId);
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Registrations.AnyAsync(r => r.ClassId == classId && r.UserId == userId);
         }
 
         public async Task RegisterUserAsync(Guid userId, Guid classId, string Name, string EmailSMTP, CancellationToken ct)
         {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
             var registration = new Registration
             {
                 Id = Guid.NewGuid(),
@@ -41,25 +41,27 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 RegisteredAt = DateTime.UtcNow
             };
 
-            _db.Registrations.Add(registration);
-            await _db.SaveChangesAsync(ct);
+            context.Registrations.Add(registration);
+            await context.SaveChangesAsync(ct);
         }
 
         public async Task UnregisterUserAsync(Guid userId, Guid classId, CancellationToken ct)
         {
-            var registration = await _db.Registrations
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
+            var registration = await context.Registrations
                 .FirstOrDefaultAsync(r => r.UserId == userId && r.ClassId == classId, ct);
 
-            if (registration == null)
-                return; // Or throw an exception depending on your business logic
+            if (registration == null) return;
 
-            _db.Registrations.Remove(registration);
-            await _db.SaveChangesAsync(ct);
+            context.Registrations.Remove(registration);
+            await context.SaveChangesAsync(ct);
         }
 
         public async Task<List<Guid>> GetClassIdsByUserAsync(Guid userId)
         {
-            return await _db.Registrations
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Registrations
                 .Where(r => r.UserId == userId)
                 .Select(r => r.ClassId)
                 .ToListAsync();
@@ -67,17 +69,20 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 
         public async Task<List<Registration>> GetRegistrationsByClassAsync(Guid classId)
         {
-            return await _db.Registrations
-                            .Include(r => r.User)
-                            .Where(r => r.ClassId == classId)
-                            .ToListAsync();
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Registrations
+                .Include(r => r.User)
+                .Where(r => r.ClassId == classId)
+                .ToListAsync();
         }
 
         public async Task UpdateAttendanceAsync(List<AttendanceUpdateDto> updates, CancellationToken ct)
         {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+
             foreach (var update in updates)
             {
-                await _db.Registrations
+                await context.Registrations
                     .Where(r => r.Id == update.RegistrationId)
                     .ExecuteUpdateAsync(setters => setters
                         .SetProperty(r => r.AttendedAt, update.AttendedAt),
@@ -85,6 +90,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             }
         }
 
-
+        public async Task<List<Registration>> GetRegistrationsByUserIdAsync(Guid userId, CancellationToken ct)
+        {
+            await using var context = await _contextFactory.CreateDbContextAsync();
+            return await context.Registrations
+                .Include(r => r.Class)
+                .Where(r => r.UserId == userId)
+                .ToListAsync(ct);
+        }
     }
 }

@@ -78,7 +78,7 @@ namespace ClassRegistrationApplication2025.Application.Services
                 JsonDefinition = dto.JsonDefinition,
                 CreatedByUserId = dto.CreatedByUserId,
                 CreatedAt = dto.CreatedAt == default ? DateTime.UtcNow : dto.CreatedAt,
-                ClassId = dto.ClassId
+                ClassId = (Guid)dto.ClassId
             };
         }
     }

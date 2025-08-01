@@ -41,6 +41,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISubjectSurveyService, SubjectSurveyService>();
 builder.Services.AddScoped<IClassSurveyService, ClassSurveyService>();
 builder.Services.AddSingleton<ISurveyJsonService, SurveyJsonService>();
+builder.Services.AddScoped<IGetAvailableClassSurveysForUserUseCase, GetAvailableClassSurveysForUserUseCase>();
 builder.Services.AddScoped<GetAllClassesUseCase>();
 builder.Services.AddScoped<GetClassDetailsUseCase>();
 builder.Services.AddScoped<RegisterForClassUseCase>();

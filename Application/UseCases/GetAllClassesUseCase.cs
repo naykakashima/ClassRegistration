@@ -1,5 +1,9 @@
 ﻿using ClassRegistrationApplication2025.Application.DTOs;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ClassRegistrationApplication2025.Application.UseCases
 {
@@ -12,9 +16,9 @@ namespace ClassRegistrationApplication2025.Application.UseCases
             _classRepo = classRepo;
         }
 
-        public async Task<List<ClassSummaryDto>> ExecuteAsync()
+        public async Task<List<ClassSummaryDto>> ExecuteAsync(CancellationToken ct = default)
         {
-            var classes = await _classRepo.GetAllAsync();
+            var classes = await _classRepo.GetAllAsync(ct);
 
             // Map entities to DTOs, including counting registrations
             return classes.Select(c => new ClassSummaryDto
@@ -27,7 +31,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 StartTime = c.StartTime,
                 EndTime = c.EndTime,
                 MaxSlots = c.MaxSlots,
-                RegisteredCount = c.Registrations.Count,
+                RegisteredCount = c.Registrations?.Count ?? 0, // Null-safe count
                 Status = c.Status
             }).ToList();
         }

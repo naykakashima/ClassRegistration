@@ -2,7 +2,7 @@
 {
     public class ClassSurvey : SurveyBase
     {
-        public Guid? ClassId { get; set; }
+        public Guid ClassId { get; set; }
         public Class Class { get; set; }
     }
 }
