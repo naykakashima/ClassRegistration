@@ -44,15 +44,30 @@
             </MudButton>
         </MudTd>
         <MudTd DataLabel="Survey">
-            <MudTooltip Text="@((context.HasSurvey ? "Survey available" : "No Survey Yet"))">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Secondary"
-                           Size="Size.Small"
-                           OnClick="@(() => OnSurvey.InvokeAsync(context.Id))"
-                           EndIcon="@Icons.Material.Filled.Build">
-                    Survey Builder
-                </MudButton>
-            </MudTooltip>
+            @if (context.HasSurvey == true)
+            {
+                <MudTooltip Text="Survey available">
+                    <MudButton Variant="Variant.Filled"
+                               Style="@($"color:{Theme.PaletteLight.Dark}; background:{Theme.PaletteLight.Warning};")"
+                               Size="Size.Small"
+                               OnClick="@(() => OnSurveyEdit.InvokeAsync(context.Id))"
+                               EndIcon="@Icons.Material.Filled.Build">
+                        Edit Survey
+                    </MudButton>
+                </MudTooltip>
+            }
+            else
+            {
+                <MudTooltip Text="No Survey Yet">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               Size="Size.Small"
+                               OnClick="@(() => OnSurveyCreate.InvokeAsync(context.Id))"
+                               EndIcon="@Icons.Material.Filled.Build">
+                        Create Survey
+                    </MudButton>
+                </MudTooltip>
+            }
         </MudTd>
         <MudTd DataLabel="Edit Class">
             <MudButton Variant="Variant.Filled"
@@ -97,7 +112,9 @@
     [Parameter]
     public EventCallback<Guid> OnEdit { get; set; }
     [Parameter]
-    public EventCallback<Guid> OnSurvey { get; set; }
+    public EventCallback<Guid> OnSurveyCreate { get; set; }
+    [Parameter]
+    public EventCallback<Guid> OnSurveyEdit { get; set; }
     [Parameter]
     public EventCallback<Guid> OnViewUsers { get; set; }
     [Parameter]
@@ -111,6 +128,8 @@
     private UserDto? _currentUser;
 
     private bool isLoading = true;
+
+    private MudTheme Theme = new MudTheme();
 
     private Color GetStatusColor(ClassStatus status)
     {

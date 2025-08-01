@@ -13,7 +13,7 @@ namespace ClassRegistrationApplication2025.Domain.Entities
 
         [Required]
         public string JsonDefinition { get; set; }
-
+        
         public Guid CreatedByUserId { get; set; }
         public User CreatedByUser { get; set; }
 

@@ -1,0 +1,92 @@
+﻿@page "/subjects/{SubjectId:guid}/classes-manage/{classId:guid}/editsurvey/{classTitle}"
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Application.UseCases
+@using SurveyBuilder.Components
+@using global::SurveyBuilder.Models
+@using global::SurveyBuilder.Services
+@using MudBlazor
+
+@inject IClassSurveyService SurveyService
+@inject GetSurveyByClassIdUseCase GetSurveyUseCase
+@inject ISurveyJsonService JsonService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<title>Edit Survey for Class</title>
+
+<MudStack Row="true">
+    <MudText Typo="Typo.h5">Editing Survey: @classTitle</MudText>
+</MudStack>
+
+@if (Survey == null)
+{
+    <MudText Color="Color.Error">Survey not found or failed to load.</MudText>
+}
+else
+{
+    <SurveyBuilder Survey="JsonService.Deserialize(Survey.JsonDefinition)" SurveyChanged="@OnSurveyChanged" />
+
+    <MudStack Class="d-flex justify-center mt-4">
+        <MudButton OnClick="UpdateDb" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" StartIcon="@Icons.Material.Filled.Save">
+            Update Survey
+        </MudButton>
+    </MudStack>
+}
+
+@code {
+    [Parameter] public Guid subjectId { get; set; }
+    [Parameter] public Guid classId { get; set; }
+    [Parameter] public string classTitle { get; set; }
+
+    private ClassSurveyDto? Survey;
+    private string Serialized = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Survey = await GetSurveyUseCase.ExecuteAsync(classId);
+
+        if (Survey is null)
+        {
+            Snackbar.Add("Survey not found for this subject.", Severity.Error);
+            return;
+        }
+
+        Serialized = Survey.JsonDefinition;
+    }
+
+    private Task OnSurveyChanged(SurveyModel updated)
+    {
+        Serialized = JsonService.Serialize(updated);
+        if (Survey is not null)
+        {
+            Survey.JsonDefinition = Serialized;
+            Survey.Title = updated.Title;
+            Survey.Description = updated.Description;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task UpdateDb()
+    {
+        if (Survey is null || string.IsNullOrWhiteSpace(Survey.Title) || string.IsNullOrWhiteSpace(Survey.JsonDefinition))
+        {
+            Snackbar.Add("Survey title and content are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await SurveyService.UpdateAsync(Survey);
+            Snackbar.Add("Survey successfully updated!", Severity.Success);
+            Nav.NavigateTo($"/subjects/{subjectId}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating survey: {ex.Message}", Severity.Error);
+        }
+    }
+}
+

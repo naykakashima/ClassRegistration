@@ -73,11 +73,11 @@
             {
                 <MudTooltip Text="Survey available">
                     <MudButton Variant="Variant.Filled"
-                               Color="Color.Secondary"
+                               Style="@($"color:{Theme.PaletteLight.Dark}; background:{Theme.PaletteLight.Warning};")"
                                Size="Size.Small"
                                OnClick="@(() => OnSurveyEdit.InvokeAsync(context.Id))"
                                EndIcon="@Icons.Material.Filled.Build">
-                        Survey Builder
+                        Edit Survey
                     </MudButton>
                 </MudTooltip>
             }
@@ -89,7 +89,7 @@
                                Size="Size.Small"
                                OnClick="@(() => OnSurveyCreate.InvokeAsync(context.Id))"
                                EndIcon="@Icons.Material.Filled.Build">
-                        Survey Builder
+                        Create Survey
                     </MudButton>
                 </MudTooltip>
             }
@@ -143,4 +143,5 @@
 
     [Parameter]
     public EventCallback<Guid> OnDelete { get; set; }
+    private MudTheme Theme = new MudTheme();
 }

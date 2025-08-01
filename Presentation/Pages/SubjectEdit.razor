@@ -47,7 +47,7 @@
         }
         else
         {
-            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurvey="NavigateToSurvey" OnViewUsers="ShowRegisteredUsersModal" OnDownloadExcel="ExportExcel" />
+            <ClassesTableWithEdit Classes="classes" OnEdit="NavigateToEdit" OnSurveyCreate="NavigateToSurveyCreate" OnSurveyEdit="NavigateToSurveyEdit" OnViewUsers="ShowRegisteredUsersModal" OnDownloadExcel="ExportExcel" />
         }
     </MudContainer>
 </CascadingAuthenticationState>
@@ -112,7 +112,7 @@
     }
 
     //To fix routing
-    private void NavigateToSurvey(Guid classId)
+    private void NavigateToSurveyCreate(Guid classId)
     {
         InvokeAsync(() =>
         {
@@ -120,7 +120,20 @@
             if (selectedClass is null) return;
 
             var slugTitle = Slugify(selectedClass.ClassName);
-            NavigationManager.NavigateTo($"/subjects/{SubjectId}/classes-manage/{classId}/{slugTitle}");
+            NavigationManager.NavigateTo($"/subjects/{SubjectId}/classes-manage/{classId}/createsurvey/{slugTitle}");
+
+        });
+    }
+
+    private void NavigateToSurveyEdit(Guid classId)
+    {
+        InvokeAsync(() =>
+        {
+            var selectedClass = classes.FirstOrDefault(s => s.Id == classId);
+            if (selectedClass is null) return;
+
+            var slugTitle = Slugify(selectedClass.ClassName);
+            NavigationManager.NavigateTo($"/subjects/{SubjectId}/classes-manage/{classId}/editsurvey/{slugTitle}");
 
         });
     }

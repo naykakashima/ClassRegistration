@@ -33,20 +33,33 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
         public async Task UpdateAsync(SurveyBase updatedSurvey, CancellationToken ct)
         {
             var existing = await _db.Surveys
-                .OfType<SubjectSurvey>()
-                .FirstOrDefaultAsync(s => s.Id == updatedSurvey.Id, ct);
+                .FirstOrDefaultAsync(s => s.Id == updatedSurvey.Id, ct); 
 
             if (existing == null)
                 throw new Exception("Survey not found.");
 
-            // Manual patch
+            // Handle patching based on actual type
             existing.Title = updatedSurvey.Title;
             existing.Description = updatedSurvey.Description;
             existing.JsonDefinition = updatedSurvey.JsonDefinition;
-            existing.SubjectId = ((SubjectSurvey)updatedSurvey).SubjectId;
+
+            switch (existing)
+            {
+                case SubjectSurvey subject when updatedSurvey is SubjectSurvey updatedSubject:
+                    subject.SubjectId = updatedSubject.SubjectId;
+                    break;
+
+                case ClassSurvey cls when updatedSurvey is ClassSurvey updatedClass:
+                    cls.ClassId = updatedClass.ClassId;
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Survey type mismatch or unsupported type.");
+            }
 
             await _db.SaveChangesAsync(ct);
         }
+
 
         public async Task DeleteAsync(Guid surveyId, CancellationToken ct)
         {
