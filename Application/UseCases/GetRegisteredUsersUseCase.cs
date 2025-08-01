@@ -25,7 +25,9 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 Id = r.Id,
                 UserID = r.User.UserID,
                 UserName = r.UserName,
-                RegisteredAt = r.RegisteredAt
+                EmailSMTP = r.EmailSMTP,         
+                RegisteredAt = r.RegisteredAt,
+                AttendedAt = r.AttendedAt       
             }).ToList();
         }
     }

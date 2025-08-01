@@ -2,10 +2,11 @@
 @using ClassRegistrationApplication2025.Application.UseCases
 
 @inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
+@inject UpdateAttendanceUseCase UpdateAttendanceUseCase
+@inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
-
         @if (isLoading)
         {
             <MudProgressCircular Indeterminate="true" />
@@ -16,41 +17,64 @@
         }
         else
         {
-            <MudPaper Class="p-4" Elevation="0">
-                <MudList T="string" Dense="true" Class="w-100">
-                    @foreach (var user in Users)
-                    {
-                        <MudListItem Text="@user.UserName" Icon="@Icons.Material.Filled.Person" />
-                    }
-                </MudList>
-            </MudPaper>
-
+            <MudTable Items="Users" Hover="true" Dense="true" Bordered="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Email</MudTh>
+                    <MudTh>Attended</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.UserName</MudTd>
+                    <MudTd>@context.EmailSMTP</MudTd>
+                    <MudTd>
+                        <MudCheckBox T="bool"
+                                     @bind-Value="context.IsAttended" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         }
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel" Color="Color.Primary">Close</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SaveAttendance" Disabled="saveInProgress">
+            @if (saveInProgress)
+            {
+                <MudProgressCircular Size="Size.Small" Color="Color.Inherit" />
+                <span style="margin-left: 8px">Saving...</span>
+            }
+            else
+            {
+                <span>Save</span>
+            }
+        </MudButton>
+        <MudButton OnClick="MudDialog.Cancel" Disabled="saveInProgress">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
     [Parameter] public Guid ClassId { get; set; }
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
-
-    private List<RegisteredUsersDto> Users;
+    private List<RegisteredUsersDto> Users = new();
     private bool isLoading = true;
+    private bool saveInProgress = false;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             Users = await GetRegisteredUsersUseCase.ExecuteAsync(ClassId);
+
+            // Ensure IsAttended reflects the actual AttendedAt status
+            foreach (var user in Users)
+            {
+                // This will automatically set IsAttended based on AttendedAt
+                user.IsAttended = user.AttendedAt.HasValue;
+            }
         }
         catch (Exception ex)
         {
-            // You might want to handle errors or notify user here
+            Snackbar.Add($"Error loading attendance data: {ex.Message}", MudBlazor.Severity.Error);
         }
         finally
         {
@@ -58,5 +82,32 @@
         }
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private async Task SaveAttendance()
+    {
+        saveInProgress = true;
+
+        try
+        {
+            var updates = Users
+                .Select(u => new AttendanceUpdateDto
+                {
+                    RegistrationId = u.RegistrationId,
+                    AttendedAt = u.IsAttended ? DateTime.UtcNow : null
+                })
+                .ToList();
+
+            await UpdateAttendanceUseCase.ExecuteAsync(updates, CancellationToken.None);
+
+            Snackbar.Add("Attendance saved successfully.", MudBlazor.Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save attendance: {ex.Message}", MudBlazor.Severity.Error);
+        }
+        finally
+        {
+            saveInProgress = false;
+        }
+    }
 }

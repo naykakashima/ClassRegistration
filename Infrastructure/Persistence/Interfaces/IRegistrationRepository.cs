@@ -1,4 +1,5 @@
-﻿using ClassRegistrationApplication2025.Domain.Entities;
+﻿using ClassRegistrationApplication2025.Application.DTOs;
+using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
@@ -11,6 +12,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task UnregisterUserAsync(Guid userId, Guid classId, CancellationToken ct);
         Task<List<Guid>> GetClassIdsByUserAsync(Guid userId);
         Task<List<Registration>> GetRegistrationsByClassAsync(Guid classId);
+        Task UpdateAttendanceAsync(List<AttendanceUpdateDto> updates, CancellationToken ct);
+
 
     }
 }

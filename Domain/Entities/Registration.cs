@@ -22,5 +22,10 @@ namespace ClassRegistrationApplication2025.Domain.Entities
         public string UserName { get; set; }
         public string EmailSMTP { get; set; }
         public DateTime RegisteredAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? AttendedAt { get; set; }
+
+        [NotMapped]
+        public bool HasAttended => AttendedAt.HasValue;
     }
 }

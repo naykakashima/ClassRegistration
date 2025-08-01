@@ -58,6 +58,8 @@ builder.Services.AddScoped<DeleteSubjectUseCase>();
 builder.Services.AddScoped<GetSurveyBySubjectIdUseCase>();
 builder.Services.AddScoped<GetSurveyByClassIdUseCase>();
 builder.Services.AddScoped<GetSubjectIdFromClassIdUseCase>();
+builder.Services.AddScoped<UpdateAttendanceUseCase>();
+
 
 
 

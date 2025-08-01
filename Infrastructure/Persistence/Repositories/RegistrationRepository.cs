@@ -1,8 +1,10 @@
-﻿using ClassRegistrationApplication2025.Domain.Entities;
+﻿using ClassRegistrationApplication2025.Application.DTOs;
+using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -70,6 +72,19 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                             .Where(r => r.ClassId == classId)
                             .ToListAsync();
         }
+
+        public async Task UpdateAttendanceAsync(List<AttendanceUpdateDto> updates, CancellationToken ct)
+        {
+            foreach (var update in updates)
+            {
+                await _db.Registrations
+                    .Where(r => r.Id == update.RegistrationId)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(r => r.AttendedAt, update.AttendedAt),
+                    ct);
+            }
+        }
+
 
     }
 }
