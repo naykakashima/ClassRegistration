@@ -97,6 +97,11 @@
             Snackbar.Add("Cannot delete a subject that has sessions.", Severity.Warning);
             return;
         }
+        if (subject.HasSurvey == true)
+        {
+            Snackbar.Add("Cannot delete a subject that has a survey.", Severity.Warning);
+            return;
+        }
 
         var confirmed = await ShowConfirmationDialog($"Delete subject '{subject.Title}'?");
         if (!confirmed)

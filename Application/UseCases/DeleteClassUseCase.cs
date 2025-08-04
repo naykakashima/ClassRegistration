@@ -13,15 +13,18 @@ namespace ClassRegistrationApplication2025.Application.UseCases
         private readonly IClassRepository _classRepo;
         private readonly IUserService _userService;
         private readonly IRegistrationRepository _registrationRepo;
+        private readonly ISurveyRepository _surveyRepo;
 
         public DeleteClassUseCase(
             IClassRepository classRepo,
             IUserService userService,
-            IRegistrationRepository registrationRepo)
+            IRegistrationRepository registrationRepo,
+            ISurveyRepository surveyRepository)
         {
             _classRepo = classRepo;
             _userService = userService;
             _registrationRepo = registrationRepo;
+            _surveyRepo = surveyRepository;
         }
 
         public async Task ExecuteAsync(Guid classId, string currentUserId, CancellationToken ct = default)
@@ -41,7 +44,13 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 throw new InvalidOperationException("Cannot delete class with existing registrations");
             }
 
-            // 3. Perform deletion
+            var classHasSurvey = await _surveyRepo.GetByClassIdAsync(classId);
+            if (classHasSurvey?.ClassId != null)
+            {
+                throw new InvalidOperationException("Cannot delete class with existing survey");
+            }
+
+                // 3. Perform deletion
             await _classRepo.DeleteClassAsync(classId, ct);
         }
     }
