@@ -84,11 +84,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
         public async Task<List<Class>> GetClassesByIdsAsync(IEnumerable<Guid> classIds, CancellationToken ct = default)
         {
             await using var context = await _contextFactory.CreateDbContextAsync(ct);
-            return await context.Classes
-                .Where(c => classIds.Contains(c.Id))
-                .Include(c => c.Subject)
+            var result = await context.Classes
                 .AsNoTracking()
+                .Where(c => classIds.Equals(c.Id))
+                .Include(c => c.Subject)
                 .ToListAsync(ct);
+
+            return result;
         }
 
         // Transaction support implementation

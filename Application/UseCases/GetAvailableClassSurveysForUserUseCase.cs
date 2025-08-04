@@ -38,7 +38,7 @@ namespace ClassRegistrationApplication2025.Application.UseCases
                 .Where(r => r.AttendedAt != null)
                 .Select(r => r.ClassId)
                 .Distinct()
-                .ToHashSet();
+                .ToList();
 
             if (!attendedClassIds.Any())
             {

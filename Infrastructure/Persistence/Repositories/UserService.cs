@@ -26,7 +26,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
 
         public async Task<UserDto> GetOrCreateCurrentUserAsync(string adUserId)
         {
-            using var context = _contextFactory.CreateDbContext();
+            using var context = await _contextFactory.CreateDbContextAsync();
 
             if (_cachedUser != null) return _cachedUser;
 
