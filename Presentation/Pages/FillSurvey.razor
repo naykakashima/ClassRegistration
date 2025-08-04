@@ -1,0 +1,211 @@
+﻿@page "/surveys/fill/{SurveyId:guid}"
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Domain.Entities
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using SurveyBuilder.Models
+
+@inject IClassSurveyService ClassSurveyService
+@inject ISurveyResponseService SurveyResponseService
+@inject IUserService userService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject ISurveyQueryService SurveyQueryService
+
+
+<PageTitle>Fill Survey</PageTitle>
+
+@if (IsLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (Survey == null)
+{
+    <MudText Color="Color.Error">Survey not found.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h5">@Survey.Title</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mb-4">@Survey.Description</MudText>
+
+    <MudStack Spacing="2">
+        @for (int i = 0; i < Survey.Questions.Count; i++)
+        {
+            var question = Survey.Questions[i];
+            var currentIndex = i + 1;
+
+            <MudPaper Class="pa-4" Elevation="1" Style="border-left: 4px solid #1976d2;">
+                <MudStack Spacing="1">
+                    @{
+                        var displayText = string.IsNullOrWhiteSpace(question.Text)
+                        ? "Question Hasn't Been Given A Title"
+                        : question.Text;
+
+                        var finalText = $"{currentIndex}. {displayText}";
+                    }
+
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                        @finalText
+                    </MudText>
+
+                    @switch (question.Type)
+                    {
+                        case QuestionType.OpenEnded:
+                            <MudTextField T="string"
+                                          Placeholder="User answer here..."
+                                          Lines="3"
+                                          FullWidth="true"
+                                          Value="@GetString(question.Id)"
+                                          ValueChanged="val => SetString(question.Id, val)" />
+                            break;
+
+                        case QuestionType.OpinionScale:
+                            <MudStack>
+                                <MudSlider Min="1" Max="5"
+                                           Value="@(GetNullableInt(question.Id) ?? 3)"
+                                           ValueChanged="(int val) => SetAnswer(question.Id, val)"
+                                           Step="1" TickMarks="true" />
+                                <MudStack Row="true" Class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption">1</MudText>
+                                    <MudText Typo="Typo.caption">2</MudText>
+                                    <MudText Typo="Typo.caption">3</MudText>
+                                    <MudText Typo="Typo.caption">4</MudText>
+                                    <MudText Typo="Typo.caption">5</MudText>
+                                </MudStack>
+                            </MudStack>
+                            break;
+
+                        case QuestionType.LikertScale:
+                        case QuestionType.SingleChoice:
+                            <MudRadioGroup T="string"
+                                           Value="@GetString(question.Id)"
+                                           ValueChanged="val => SetString(question.Id, val)">
+                                @foreach (var opt in question.Options)
+                                {
+                                    <MudRadio T="string" Value="@opt">@opt</MudRadio>
+                                }
+                            </MudRadioGroup>
+                            break;
+
+                        case QuestionType.MultiChoice:
+                            @foreach (var opt in question.Options!)
+                            {
+                                <MudCheckBox T="bool"
+                                             Label="@opt"
+                                             Value="@GetList(question.Id).Contains(opt)"
+                                             ValueChanged="val => OnMultiChoiceChanged(question.Id, opt, val)" />
+                            }
+                            break;
+                    }
+
+                    @if (question.Required)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Error">* Required</MudText>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+    </MudStack>
+
+    <MudStack Class="pa-4 d-flex align-items-end">
+        <MudButton Variant="Variant.Filled" Class="pa-4" Color="Color.Primary" OnClick="SubmitSurvey">Submit</MudButton>
+    </MudStack>
+}
+
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+
+    private SurveyModel? Survey;
+    private SurveyResponseModel Response = new();
+    private bool IsLoading = true;
+    private bool AlreadySubmitted = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load the survey
+        Survey = await SurveyQueryService.GetSurveyModelByIdAsync(SurveyId);
+
+        if (Survey != null)
+        {
+            // Initialize the response map
+            Response.SurveyId = Survey.Id;
+            foreach (var q in Survey.Questions)
+            {
+                Response.Answers[q.Id] = null!;
+            }
+        }
+
+        IsLoading = false;
+    }
+
+    private async void SubmitSurvey()
+    {
+        var missingRequired = Survey!.Questions
+            .Where(q => q.Required && (Response.Answers[q.Id] == null || IsEmptyAnswer(Response.Answers[q.Id])))
+            .ToList();
+
+        if (missingRequired.Any())
+        {
+            Snackbar.Add("Please fill all required fields before submitting.", Severity.Error);
+            return;
+        }
+
+        var json = System.Text.Json.JsonSerializer.Serialize(Response, new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        var parameters = new DialogParameters
+        {
+            ["FormattedJson"] = json
+        };
+
+        var dialog = await DialogService.ShowAsync<FillSurveySuccessDialog>("Survey Submitted", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Nav.NavigateTo("/listavailablesurveys");
+        }
+    }
+
+    private bool IsEmptyAnswer(object? answer)
+    {
+        return answer switch
+        {
+            string s => string.IsNullOrWhiteSpace(s),
+            List<string> list => list.Count == 0,
+            _ => answer == null
+        };
+    }
+
+
+    object? GetAnswer(string id) => Response.Answers.TryGetValue(id, out var val) ? val : null;
+
+    void SetAnswer(string id, object? value) => Response.Answers[id] = value!;
+
+    string? GetString(string id) => GetAnswer(id) as string;
+    void SetString(string id, string val) => SetAnswer(id, val);
+
+    int? GetNullableInt(string id) => GetAnswer(id) as int?;
+    int GetInt(string id) => (int)(GetAnswer(id) ?? 5);
+    void SetInt(string id, object value) => SetAnswer(id, Convert.ToInt32(value));
+
+    List<string> GetList(string id) => GetAnswer(id) as List<string> ?? new();
+    void ToggleListItem(string id, string item, bool isChecked) => SetAnswer(id, item);
+
+    void OnMultiChoiceChanged(string id, string option, bool isChecked)
+    {
+        var list = GetList(id);
+        if (isChecked && !list.Contains(option))
+            list.Add(option);
+        else if (!isChecked && list.Contains(option))
+            list.Remove(option);
+
+        SetAnswer(id, list);
+    }
+}
