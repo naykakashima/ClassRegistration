@@ -97,12 +97,14 @@ else
     </MudStack>
 }
 
+
+
 @code {
     [Parameter] public Guid SurveyId { get; set; }
     [Parameter] public Guid UserId { get; set; }
 
     private SurveyModel? Survey;
-    private Dictionary<string, object>? Answers;
+    private Dictionary<string, JsonElement>? Answers;  // Changed to JsonElement
     private bool IsLoading = true;
 
     protected override async Task OnInitializedAsync()
@@ -115,10 +117,7 @@ else
 
             if (response != null && !string.IsNullOrEmpty(response.JsonAnswers))
             {
-                Answers = JsonSerializer.Deserialize<Dictionary<string, object>>(response.JsonAnswers, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                Answers = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(response.JsonAnswers);
             }
         }
         catch (Exception ex)
@@ -132,23 +131,41 @@ else
     }
 
     string? GetString(string id)
-        => Answers != null && Answers.TryGetValue(id, out var val) ? val?.ToString() : null;
+    {
+        if (Answers == null || !Answers.TryGetValue(id, out var val)) return null;
+        return val.ValueKind switch
+        {
+            JsonValueKind.String => val.GetString(),
+            JsonValueKind.Number => val.GetInt32().ToString(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            _ => val.ToString()
+        };
+    }
 
     int GetInt(string id)
-        => Answers != null && Answers.TryGetValue(id, out var val) ? Convert.ToInt32(val) : 0;
+    {
+        if (Answers == null || !Answers.TryGetValue(id, out var val)) return 0;
+        return val.ValueKind switch
+        {
+            JsonValueKind.Number => val.GetInt32(),
+            JsonValueKind.String => int.TryParse(val.GetString(), out int result) ? result : 0,
+            _ => 0
+        };
+    }
 
     List<string> GetList(string id)
     {
         if (Answers == null || !Answers.TryGetValue(id, out var val)) return new();
 
-        if (val is JsonElement el && el.ValueKind == JsonValueKind.Array)
+        if (val.ValueKind == JsonValueKind.Array)
         {
-            return el.EnumerateArray()
-                     .Select(x => x.GetString() ?? "")
+            return val.EnumerateArray()
+                     .Select(x => x.ValueKind == JsonValueKind.String ? x.GetString() ?? "" : x.ToString())
                      .Where(x => !string.IsNullOrWhiteSpace(x))
                      .ToList();
         }
 
-        return val as List<string> ?? new();
+        return new List<string>();
     }
 }

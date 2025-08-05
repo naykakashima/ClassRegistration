@@ -19,5 +19,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task<List<ClassSurvey>> GetAllClassSurveysAsync();
         Task<ClassSurvey?> GetByClassIdAsync(Guid classId);
         Task<List<SurveyBase>> GetByCreatorUserIdAsync(Guid userId);
+        Task<List<SubjectSurvey>> GetReleasedSubjectSurveysAsync();
     }
 }

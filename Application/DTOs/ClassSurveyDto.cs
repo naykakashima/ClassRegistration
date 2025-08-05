@@ -1,6 +1,6 @@
 ﻿namespace ClassRegistrationApplication2025.Application.DTOs
 {
-    public class ClassSurveyDto
+    public class ClassSurveyDto : ISurveyBaseDto
     {
         public Guid Id { get; set; }
 

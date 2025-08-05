@@ -15,5 +15,7 @@ namespace ClassRegistrationApplication2025.Application.Interfaces
         Task UpdateAsync(SubjectSurveyDto survey);
 
         Task DeleteAsync(Guid id);
+        Task CloseSurveyAsync(Guid surveyId);
+        Task ReleaseSurveyAsync(Guid surveyId);
     }
 }

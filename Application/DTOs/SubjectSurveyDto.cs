@@ -1,6 +1,6 @@
 ﻿namespace ClassRegistrationApplication2025.Application.DTOs
 {
-    public class SubjectSurveyDto
+    public class SubjectSurveyDto : ISurveyBaseDto
     {
         public Guid Id { get; set; }
 
@@ -14,5 +14,6 @@
 
         public DateTime CreatedAt { get; set; }
         public Guid? SubjectId { get; set; }
+        public bool IsReleased { get; set; }
     }
 }

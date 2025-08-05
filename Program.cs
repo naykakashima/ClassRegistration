@@ -46,6 +46,7 @@ builder.Services.AddScoped<ISurveyResponseRepository, SurveyResponseRepository>(
 builder.Services.AddScoped<ISurveyResponseService, SurveyResponseService>();
 builder.Services.AddScoped<ISurveyQueryService, SurveyQueryService>();
 builder.Services.AddScoped<IGetSurveyBaseByIdUseCase, GetSurveyBaseByIdUseCase>();
+builder.Services.AddScoped<IGetAvailableSubjectSurveysForUserUseCase, GetAvailableSubjectSurveysForUserUseCase>();
 builder.Services.AddScoped<GetAllClassesUseCase>();
 builder.Services.AddScoped<GetClassDetailsUseCase>();
 builder.Services.AddScoped<RegisterForClassUseCase>();

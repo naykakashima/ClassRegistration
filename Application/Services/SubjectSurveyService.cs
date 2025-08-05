@@ -3,6 +3,7 @@ using ClassRegistrationApplication2025.Application.Interfaces;
 using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+using DocumentFormat.OpenXml.Vml.Office;
 
 namespace ClassRegistrationApplication2025.Application.Services
 {
@@ -50,6 +51,26 @@ namespace ClassRegistrationApplication2025.Application.Services
             await _surveyRepository.DeleteAsync(id, CancellationToken.None);
         }
 
+        public async Task ReleaseSurveyAsync(Guid surveyId)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(surveyId) as SubjectSurvey;
+            if (survey == null)
+                throw new KeyNotFoundException("Subject survey not found");
+
+            survey.IsReleased = true;
+            await _surveyRepository.UpdateAsync(survey, CancellationToken.None);
+        }
+
+        public async Task CloseSurveyAsync(Guid surveyId)
+        {
+            var survey = await _surveyRepository.GetByIdAsync(surveyId) as SubjectSurvey;
+            if (survey == null)
+                throw new KeyNotFoundException("Subject survey not found");
+
+            survey.IsReleased = false;
+            await _surveyRepository.UpdateAsync(survey, CancellationToken.None);
+        }
+
         // Mapping helpers
 
         private SubjectSurveyDto MapToDto(SubjectSurvey entity)
@@ -62,7 +83,8 @@ namespace ClassRegistrationApplication2025.Application.Services
                 JsonDefinition = entity.JsonDefinition,
                 CreatedByUserId = entity.CreatedByUserId,
                 CreatedAt = entity.CreatedAt,
-                SubjectId = entity.SubjectId
+                SubjectId = entity.SubjectId,
+                IsReleased = entity.IsReleased
             };
         }
 
@@ -76,7 +98,8 @@ namespace ClassRegistrationApplication2025.Application.Services
                 JsonDefinition = dto.JsonDefinition,
                 CreatedByUserId = dto.CreatedByUserId,
                 CreatedAt = dto.CreatedAt == default ? DateTime.UtcNow : dto.CreatedAt,
-                SubjectId = dto.SubjectId
+                SubjectId = dto.SubjectId,
+                IsReleased = dto.IsReleased
             };
         }
     }

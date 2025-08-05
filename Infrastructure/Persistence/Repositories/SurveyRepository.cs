@@ -108,6 +108,15 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                 .Where(s => s.CreatedByUserId == userId)
                 .ToListAsync();
         }
+
+        public async Task<List<SubjectSurvey>> GetReleasedSubjectSurveysAsync()
+        {
+            return await _db.Surveys
+                .OfType<SubjectSurvey>()
+                .Where(s => s.IsReleased)
+                .Include(s => s.Subject)
+                .ToListAsync();
+        }
     }
 
 }

@@ -6,9 +6,11 @@
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
+
 @inject IGetAvailableClassSurveysForUserUseCase UseCase
+@inject IGetAvailableSubjectSurveysForUserUseCase SubjectUseCase
 @inject ISurveyResponseService SurveyResponseService
-@inject IUserService CurrentUser 
+@inject IUserService CurrentUser
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthProvider
@@ -23,45 +25,52 @@
         {
             <MudProgressCircular Indeterminate="true" />
         }
-        else if (!AvailableSurveys.Any())
-        {
-            <MudText>No surveys available for you right now.</MudText>
-        }
         else
         {
-            <MudTable Items="AvailableSurveys" Dense="true">
-                <HeaderContent>
-                    <MudTh>Title</MudTh>
-                    <MudTh>Description</MudTh>
-                    <MudTh>Created</MudTh>
-                    <MudTh></MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.Title</MudTd>
-                    <MudTd>@context.Description</MudTd>
-                    <MudTd>@context.CreatedAt.ToShortDateString()</MudTd>
-                    <MudTd>
-                        @if (IsSubmitted(context.Id))
-                        {
-                            <MudButton Size="Size.Small" Disabled="true" Color="Color.Secondary">
-                                Already Filled
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => GoToFillSurvey(context.Id))">
-                                Fill
-                            </MudButton>
-                        }
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
+            <MudText Typo="Typo.h6" Class="mb-2">Available Surveys</MudText>
+
+            @if (!AllAvailableSurveys.Any())
+            {
+                <MudText>No surveys available for you right now.</MudText>
+            }
+            else
+            {
+                <MudTable Items="AllAvailableSurveys" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Created</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Title</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@context.CreatedAt.ToShortDateString()</MudTd>
+                        <MudTd>
+                            @if (IsSubmitted(context.Id))
+                            {
+                                <MudButton Size="Size.Small" Disabled="true" Color="Color.Secondary">
+                                    Already Filled
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => GoToFillSurvey(context.Id))">
+                                    Fill
+                                </MudButton>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
         }
     </MudContainer>
 </CascadingAuthenticationState>
 
 @code {
-    private List<ClassSurveyDto> AvailableSurveys = new();
+    private List<ClassSurveyDto> AvailableClassSurveys = new();
+    private List<SubjectSurveyDto> AvailableSubjectSurveys = new();
+    private List<ISurveyBaseDto> AllAvailableSurveys = new();
     private HashSet<Guid> SubmittedSurveyIds = new();
     private UserDto currentUser;
     private bool isLoading = true;
@@ -76,9 +85,24 @@
             if (!string.IsNullOrEmpty(userIdString))
             {
                 currentUser = await CurrentUser.GetOrCreateCurrentUserAsync(userIdString);
-                AvailableSurveys = await UseCase.ExecuteAsync(currentUser.Id, default);
 
-                foreach (var survey in AvailableSurveys)
+                AvailableClassSurveys = await UseCase.ExecuteAsync(currentUser.Id, default);
+                AvailableSubjectSurveys = await SubjectUseCase.ExecuteAsync(currentUser.Id, default);
+
+                AllAvailableSurveys = AvailableClassSurveys
+                    .Cast<ISurveyBaseDto>()
+                    .Concat(AvailableSubjectSurveys.Cast<ISurveyBaseDto>())
+                    .OrderBy(s => s.CreatedAt)
+                    .ToList();
+
+                foreach (var survey in AvailableClassSurveys)
+                {
+                    var existingResponse = await SurveyResponseService.GetResponseAsync(survey.Id, currentUser.Id);
+                    if (existingResponse is not null)
+                        SubmittedSurveyIds.Add(survey.Id);
+                }
+
+                foreach (var survey in AvailableSubjectSurveys)
                 {
                     var existingResponse = await SurveyResponseService.GetResponseAsync(survey.Id, currentUser.Id);
                     if (existingResponse is not null)
@@ -95,11 +119,11 @@
             isLoading = false;
         }
     }
+
     void GoToFillSurvey(Guid id)
     {
         Nav.NavigateTo($"/surveys/fill/{id}");
     }
-
 
     private bool IsSubmitted(Guid surveyId) => SubmittedSurveyIds.Contains(surveyId);
 }

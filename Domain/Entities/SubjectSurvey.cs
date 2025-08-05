@@ -4,5 +4,6 @@
     {
         public Guid? SubjectId { get; set; }
         public Subject Subject { get; set; }
+        public bool IsReleased { get; set; }
     }
 }
