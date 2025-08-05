@@ -6,14 +6,25 @@
 
 <MudDialog Style="width: 800px; max-width: 90vw;">
     <DialogContent>
-        <MudText Typo="Typo.h6" Class="mb-2">JSON output will look like this:</MudText>
-        <MudTextField @bind-value="@FormattedJson" Lines="15" FullWidth="true" ReadOnly="true" />
+        <MudStack Spacing="2">
+            <MudStack Row="true" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                <MudText Typo="Typo.h5" Color="Color.Success">Survey Submitted</MudText>
+            </MudStack>
+
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Your responses have been recorded successfully.
+            </MudText>
+
+            <MudDivider />
+        </MudStack>
     </DialogContent>
 
     <DialogActions>
         <MudButton Color="Color.Primary" OnClick="Submit">Close</MudButton>
     </DialogActions>
 </MudDialog>
+
 
 @code {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;

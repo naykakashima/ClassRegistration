@@ -1,8 +1,11 @@
 ﻿@page "/surveys/fill/{SurveyId:guid}"
+@using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.Interfaces
 @using ClassRegistrationApplication2025.Domain.Entities
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 @using ClassRegistrationApplication2025.Presentation.Components
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
 @using SurveyBuilder.Models
@@ -10,6 +13,7 @@
 @inject IClassSurveyService ClassSurveyService
 @inject ISurveyResponseService SurveyResponseService
 @inject IUserService userService
+@inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
@@ -121,25 +125,56 @@ else
 
     private SurveyModel? Survey;
     private SurveyResponseModel Response = new();
+    private UserDto currentUser;
     private bool IsLoading = true;
     private bool AlreadySubmitted = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // Load the survey
-        Survey = await SurveyQueryService.GetSurveyModelByIdAsync(SurveyId);
 
-        if (Survey != null)
+        try
         {
-            // Initialize the response map
-            Response.SurveyId = Survey.Id;
-            foreach (var q in Survey.Questions)
+            Survey = await SurveyQueryService.GetSurveyModelByIdAsync(SurveyId);
+
+            if (Survey != null)
             {
-                Response.Answers[q.Id] = null!;
+                // Initialize the response map
+                Response.SurveyId = Survey.Id;
+                foreach (var q in Survey.Questions)
+                {
+                    Response.Answers[q.Id] = null!;
+                }
+            }
+
+
+
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var userIdString = authState.User.Identity?.Name?.Split('\\').Last();
+            var userId = authState.User.Identity?.Name?.Split('\\').Last();
+            if (!string.IsNullOrEmpty(userIdString))
+            {
+                var userDto = await userService.GetOrCreateCurrentUserAsync(userIdString);
+                currentUser = await userService.GetOrCreateCurrentUserAsync(userId);
+            }
+
+            AlreadySubmitted = await SurveyResponseService.GetResponseAsync(SurveyId, currentUser.Id) is not null;
+
+            if (AlreadySubmitted)
+            {
+                Snackbar.Add("You have already submitted this survey.", Severity.Warning);
+                Nav.NavigateTo("/surveysavailable");
+                return;
             }
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load classes: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
 
-        IsLoading = false;
     }
 
     private async void SubmitSurvey()
@@ -154,24 +189,41 @@ else
             return;
         }
 
-        var json = System.Text.Json.JsonSerializer.Serialize(Response, new System.Text.Json.JsonSerializerOptions
+        try
         {
-            WriteIndented = true
-        });
+            var json = System.Text.Json.JsonSerializer.Serialize(Response.Answers, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
 
-        var parameters = new DialogParameters
+            var responseDto = new SurveyResponseDto
+            {
+                SurveyId = SurveyId,
+                UserId = currentUser.Id,
+                JsonAnswers = json
+            };
+
+            await SurveyResponseService.AddResponseAsync(responseDto);
+
+            var parameters = new DialogParameters
+            {
+                ["FormattedJson"] = json
+            };
+
+            var dialog = await DialogService.ShowAsync<FillSurveySuccessDialog>("Survey Submitted", parameters);
+            var result = await dialog.Result;
+
+            if (!result.Canceled)
+            {
+                Nav.NavigateTo("/surveysavailable");
+            }
+        }
+        catch (Exception ex)
         {
-            ["FormattedJson"] = json
-        };
-
-        var dialog = await DialogService.ShowAsync<FillSurveySuccessDialog>("Survey Submitted", parameters);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            Nav.NavigateTo("/listavailablesurveys");
+            Snackbar.Add($"Failed to submit survey: {ex.Message}", Severity.Error);
         }
     }
+
 
     private bool IsEmptyAnswer(object? answer)
     {

@@ -1,11 +1,13 @@
 ﻿@page "/surveysavailable"
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Application.Services
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @inject IGetAvailableClassSurveysForUserUseCase UseCase
+@inject ISurveyResponseService SurveyResponseService
 @inject IUserService CurrentUser 
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
@@ -39,9 +41,18 @@
                     <MudTd>@context.Description</MudTd>
                     <MudTd>@context.CreatedAt.ToShortDateString()</MudTd>
                     <MudTd>
-                        <MudButton Size="Size.Small" OnClick="@(() => GoToFillSurvey(context.Id))">
-                            Fill
-                        </MudButton>
+                        @if (IsSubmitted(context.Id))
+                        {
+                            <MudButton Size="Size.Small" Disabled="true" Color="Color.Secondary">
+                                Already Filled
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => GoToFillSurvey(context.Id))">
+                                Fill
+                            </MudButton>
+                        }
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -51,6 +62,7 @@
 
 @code {
     private List<ClassSurveyDto> AvailableSurveys = new();
+    private HashSet<Guid> SubmittedSurveyIds = new();
     private UserDto currentUser;
     private bool isLoading = true;
 
@@ -65,6 +77,13 @@
             {
                 currentUser = await CurrentUser.GetOrCreateCurrentUserAsync(userIdString);
                 AvailableSurveys = await UseCase.ExecuteAsync(currentUser.Id, default);
+
+                foreach (var survey in AvailableSurveys)
+                {
+                    var existingResponse = await SurveyResponseService.GetResponseAsync(survey.Id, currentUser.Id);
+                    if (existingResponse is not null)
+                        SubmittedSurveyIds.Add(survey.Id);
+                }
             }
         }
         catch (Exception ex)
@@ -76,10 +95,11 @@
             isLoading = false;
         }
     }
-
-
     void GoToFillSurvey(Guid id)
     {
         Nav.NavigateTo($"/surveys/fill/{id}");
     }
+
+
+    private bool IsSubmitted(Guid surveyId) => SubmittedSurveyIds.Contains(surveyId);
 }
