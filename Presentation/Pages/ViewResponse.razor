@@ -1,0 +1,154 @@
+﻿@page "/surveys/mycreated/{SurveyId:guid}/responses/{UserId:guid}"
+
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using Microsoft.AspNetCore.Components
+@using MudBlazor
+@using SurveyBuilder.Models
+@using System.Text.Json
+
+@inject ISurveyResponseService SurveyResponseService
+@inject ISurveyQueryService SurveyQueryService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<title>View Response</title>
+
+@if (IsLoading)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (Survey == null || Answers == null)
+{
+    <MudText Color="Color.Error">Survey or response not found.</MudText>
+}
+else
+{
+    <MudText Typo="Typo.h5">@Survey.Title</MudText>
+    <MudText Typo="Typo.subtitle2" Class="mb-4">@Survey.Description</MudText>
+
+    <MudStack Spacing="2">
+        @for (int i = 0; i < Survey.Questions.Count; i++)
+        {
+            var question = Survey.Questions[i];
+            var currentIndex = i + 1;
+
+            <MudPaper Class="pa-4" Elevation="1" Style="border-left: 4px solid #1976d2;">
+                <MudStack Spacing="1">
+                    @{
+                        var displayText = string.IsNullOrWhiteSpace(question.Text)
+                        ? "Question Hasn't Been Given A Title"
+                        : question.Text;
+
+                        var finalText = $"{currentIndex}. {displayText}";
+                    }
+
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                        @finalText
+                    </MudText>
+
+                    @switch (question.Type)
+                    {
+                        case QuestionType.OpenEnded:
+                            <MudTextField T="string"
+                                          Value="@GetString(question.Id)"
+                                          Disabled="true"
+                                          Variant="Variant.Outlined"
+                                          FullWidth="true" />
+                            break;
+
+                        case QuestionType.OpinionScale:
+                            <MudSlider Min="1" Max="5"
+                                       Value="@(GetInt(question.Id))"
+                                       Disabled="true"
+                                       Step="1" TickMarks="true" />
+                            break;
+
+                        case QuestionType.LikertScale:
+                        case QuestionType.SingleChoice:
+                            <MudRadioGroup T="string"
+                                           Value="@GetString(question.Id)"
+                                           Disabled="true">
+                                @foreach (var opt in question.Options)
+                                {
+                                    <MudRadio T="string" Value="@opt">@opt</MudRadio>
+                                }
+                            </MudRadioGroup>
+                            break;
+
+                        case QuestionType.MultiChoice:
+                            @foreach (var opt in question.Options!)
+                            {
+                                <MudCheckBox T="bool"
+                                             Label="@opt"
+                                             Checked="@GetList(question.Id).Contains(opt)"
+                                             Disabled="true" />
+                            }
+                            break;
+                    }
+
+                    @if (question.Required)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Error">* Required</MudText>
+                    }
+                </MudStack>
+            </MudPaper>
+        }
+    </MudStack>
+}
+
+@code {
+    [Parameter] public Guid SurveyId { get; set; }
+    [Parameter] public Guid UserId { get; set; }
+
+    private SurveyModel? Survey;
+    private Dictionary<string, object>? Answers;
+    private bool IsLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Survey = await SurveyQueryService.GetSurveyModelByIdAsync(SurveyId);
+
+            var response = await SurveyResponseService.GetResponseAsync(SurveyId, UserId);
+
+            if (response != null && !string.IsNullOrEmpty(response.JsonAnswers))
+            {
+                Answers = JsonSerializer.Deserialize<Dictionary<string, object>>(response.JsonAnswers, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading response: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    string? GetString(string id)
+        => Answers != null && Answers.TryGetValue(id, out var val) ? val?.ToString() : null;
+
+    int GetInt(string id)
+        => Answers != null && Answers.TryGetValue(id, out var val) ? Convert.ToInt32(val) : 0;
+
+    List<string> GetList(string id)
+    {
+        if (Answers == null || !Answers.TryGetValue(id, out var val)) return new();
+
+        if (val is JsonElement el && el.ValueKind == JsonValueKind.Array)
+        {
+            return el.EnumerateArray()
+                     .Select(x => x.GetString() ?? "")
+                     .Where(x => !string.IsNullOrWhiteSpace(x))
+                     .ToList();
+        }
+
+        return val as List<string> ?? new();
+    }
+}

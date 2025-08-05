@@ -12,6 +12,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
         Task<List<UserDto>> GetAllUsersAsync();
         Task<bool> UpdateUserRoleAsync(Guid userId, Role newRole, string actingUserAdId);
         Task<User> GetUserByAdUserIdAsync(string adUserId, CancellationToken ct = default);
+        Task<UserDto?> GetUserByIdAsync(Guid userId);
 
     }
 }

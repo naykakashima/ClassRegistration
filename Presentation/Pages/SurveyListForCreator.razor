@@ -1,0 +1,100 @@
+﻿@page "/surveys/mycreated"
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using MudBlazor
+@inject ISurveyResponseService SurveyService
+@inject IUserService UserService
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Nav
+
+<MudPaper Class="pa-6">
+    <MudGrid>
+        <MudItem xs="12">
+            <MudText Typo="Typo.h5" Class="mb-2">My Created Surveys</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4" Color="Color.Secondary">
+                Here you can view the surveys you’ve created and check how many responses each one received.
+            </MudText>
+        </MudItem>
+        <MudItem xs="12">
+            @if (surveys == null)
+            {
+                <MudProgressCircular Indeterminate="true" />
+            }
+            else if (!surveys.Any())
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                    You haven’t created any surveys yet.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="surveys" Elevation="1" Dense="true" Hover="true" Bordered="true" Class="mt-2">
+                    <HeaderContent>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Responses</MudTh>
+                        <MudTh align="right"></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Title">@context.Title</MudTd>
+                        <MudTd DataLabel="Responses">@context.ResponseCount</MudTd>
+                        <MudTd Class="flex justify-items-center">
+                            <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
+                                       OnClick="@(() => ViewResponses(context.Id))">
+                                View
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+
+@code {
+    private List<SurveyWithResponseCount> surveys = new();
+    private Guid _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var loginId = authState.User.Identity?.Name?.Split('\\').Last();
+
+        var currentUser = await UserService.GetOrCreateCurrentUserAsync(loginId);
+
+        _currentUserId = currentUser.Id; 
+
+        var createdSurveys = await SurveyService.GetSurveysCreatedByUserAsync(_currentUserId);
+
+        var surveyList = new List<SurveyWithResponseCount>();
+
+        foreach (var s in createdSurveys)
+        {
+            if (Guid.TryParse(s.Id, out var surveyGuid))
+            {
+                var count = await SurveyService.GetResponseCountAsync(surveyGuid);
+                surveyList.Add(new SurveyWithResponseCount
+                {
+                    Id = surveyGuid,
+                    Title = s.Title,
+                    ResponseCount = count
+                });
+            }
+        }
+
+        surveys = surveyList;
+    }
+
+    void ViewResponses(Guid surveyId)
+    {
+        Nav.NavigateTo($"/surveys/mycreated/{surveyId}/responses");
+    }
+
+    class SurveyWithResponseCount
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; }
+        public int ResponseCount { get; set; }
+    }
+}

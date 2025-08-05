@@ -1,5 +1,6 @@
 ﻿using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
+using DocumentFormat.OpenXml.Office2013.Excel;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 {
@@ -17,5 +18,6 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 
         Task<List<ClassSurvey>> GetAllClassSurveysAsync();
         Task<ClassSurvey?> GetByClassIdAsync(Guid classId);
+        Task<List<SurveyBase>> GetByCreatorUserIdAsync(Guid userId);
     }
 }

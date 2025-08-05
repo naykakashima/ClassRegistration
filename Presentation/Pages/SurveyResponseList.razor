@@ -1,0 +1,88 @@
+﻿@page "/surveys/mycreated/{surveyId:guid}/responses"
+@using ClassRegistrationApplication2025.Application.Interfaces
+@using ClassRegistrationApplication2025.Application.DTOs
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@using MudBlazor
+@inject ISurveyResponseService SurveyResponseService
+@inject IUserService UserService
+@inject NavigationManager Nav
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Responses for This Survey</MudText>
+
+    @if (loading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else if (responses == null || !responses.Any())
+    {
+        <MudText>No one has submitted this survey yet.</MudText>
+    }
+    else
+    {
+        <MudTable Items="responses" Hover="true">
+            <HeaderContent>
+                <MudTh>User</MudTh>
+                <MudTh>Submitted At</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.UserName</MudTd>
+                <MudTd>@context.SubmittedAt.ToLocalTime().ToString("g")</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                               OnClick="@(() => ViewResponse(context.SurveyId, context.UserId))">
+                        View Response
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public Guid surveyId { get; set; }
+
+    private bool loading = true;
+
+    private List<ResponseViewModel> responses = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var responseDtos = await SurveyResponseService.GetResponsesBySurveyIdAsync(surveyId);
+
+        var userIds = responseDtos.Select(r => r.UserId).Distinct();
+
+        var userDict = new Dictionary<Guid, string>();
+
+        foreach (var id in userIds)
+        {
+            var user = await UserService.GetUserByIdAsync(id);
+            userDict[id] = user?.Name ?? "Unknown";
+        }
+
+        responses = responseDtos.Select(r => new ResponseViewModel
+        {
+            SurveyId = r.SurveyId,
+            UserId = r.UserId,
+            SubmittedAt = r.SubmittedAt,
+            UserName = userDict[r.UserId]
+        }).ToList();
+
+        loading = false;
+    }
+
+    void ViewResponse(Guid surveyId, Guid userId)
+    {
+        Nav.NavigateTo($"/surveys/mycreated/{surveyId}/responses/{userId}");
+    }
+
+    class ResponseViewModel
+    {
+        public Guid SurveyId { get; set; }
+        public Guid UserId { get; set; }
+        public string UserName { get; set; } = "";
+        public DateTime SubmittedAt { get; set; }
+    }
+}

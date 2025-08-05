@@ -96,6 +96,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
                     EmailSMTP = u.EmailSMTP
                 })
                 .ToListAsync();
+
         }
 
         public async Task<bool> UpdateUserRoleAsync(Guid userId, Role newRole, string actingUserAdId)
@@ -118,6 +119,25 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
         {
             using var context = _contextFactory.CreateDbContext();
             return await context.Users.FirstOrDefaultAsync(u => u.UserID == adUserId, ct);
+        }
+
+        public async Task<UserDto?> GetUserByIdAsync(Guid userId)
+        {
+            using var context = await _contextFactory.CreateDbContextAsync();
+
+            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+                return null;
+
+            return new UserDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                UserID = user.UserID,
+                Role = user.Role,
+                EmailSMTP = user.EmailSMTP
+            };
         }
 
 

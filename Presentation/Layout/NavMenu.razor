@@ -13,6 +13,7 @@
     @if (currentUser?.Role >= Role.ClassManager)
     {
         <MudNavLink Href="/create-subject" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Subjects</MudNavLink>
+        <MudNavLink Href="/surveys/mycreated" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AssignmentReturned">View Survey Responses</MudNavLink>
     }
 
     @if (currentUser?.Role == Role.SuperAdmin)

@@ -1,6 +1,7 @@
 ﻿using ClassRegistrationApplication2025.Domain.Entities;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Database;
 using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces;
+using DocumentFormat.OpenXml.Office2013.Excel;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositories
@@ -99,6 +100,13 @@ namespace ClassRegistrationApplication2025.Infrastructure.Persistence.Repositori
             return await _db.Surveys
                 .OfType<ClassSurvey>()
                 .FirstOrDefaultAsync(s => s.ClassId == classId);
+        }
+
+        public async Task<List<SurveyBase>> GetByCreatorUserIdAsync(Guid userId)
+        {
+            return await _db.Surveys
+                .Where(s => s.CreatedByUserId == userId)
+                .ToListAsync();
         }
     }
 
