@@ -2,6 +2,7 @@
 @using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.Interfaces
 @using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Presentation.Components
 @using SurveyBuilder.Components
 @using global::SurveyBuilder.Models
 @using global::SurveyBuilder.Services
@@ -12,6 +13,7 @@
 @inject ISurveyJsonService JsonService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <title>Edit Survey for Subject</title>
 
@@ -30,6 +32,10 @@ else
     <MudStack Class="d-flex justify-center mt-4">
         <MudButton OnClick="UpdateDb" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large" StartIcon="@Icons.Material.Filled.Save">
             Update Survey
+        </MudButton>
+
+        <MudButton OnClick="ConfirmDelete" Color="Color.Error" Variant="Variant.Filled" Size="Size.Large" StartIcon="@Icons.Material.Filled.Delete">
+            Delete Survey
         </MudButton>
     </MudStack>
 }
@@ -84,6 +90,44 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error updating survey: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmDelete()
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", $"Do you really want to delete the survey '{Survey?.Title}'? This action cannot be undone." },
+            { "ButtonText", "Delete" }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)  
+        {
+            await DeleteSurvey();
+        }
+    }
+
+
+    private async Task DeleteSurvey()
+    {
+        if (Survey is null)
+        {
+            Snackbar.Add("No survey loaded to delete.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await SurveyService.DeleteAsync(Survey.Id);
+            Snackbar.Add("Survey deleted successfully.", Severity.Success);
+            Nav.NavigateTo($"/subjects/{subjectId}"); // Navigate back to subject page
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to delete survey: {ex.Message}", Severity.Error);
         }
     }
 }

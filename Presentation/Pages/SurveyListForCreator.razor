@@ -55,7 +55,7 @@
 @code {
     private List<SurveyWithResponseCount> surveys = new();
     private Guid _currentUserId;
-
+        
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthProvider.GetAuthenticationStateAsync();
