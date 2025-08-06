@@ -3,6 +3,7 @@
 @using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
 @inject IEmailService EmailService
 @inject ISnackbar Snackbar
+@inject IConfiguration Config
 @inject GetAllClassesBySubjectIdUseCase GetAllClassesBySubjectIdUseCase
 @inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
 
@@ -40,16 +41,22 @@
                                     {
                                         <MudListItem>
                                             <MudStack Row="true" Class="d-flex justify-space-between">
-                                                <MudText Typo="Typo.body1">@user.UserName</MudText>
+                                                <MudText Typo="Typo.body1">@user.Dto.UserName</MudText>
 
-                                                <MudButton OnClick="@(() => SendSurveyInvite(user))"
-                                                           Color="Color.Secondary" Variant="Variant.Outlined"
-                                                           Size="Size.Small" StartIcon="@Icons.Material.Filled.Email">
-                                                    Send Survey
-                                                </MudButton>
+                                                <MudStack Spacing="1">
+                                                    <MudButton OnClick="@(() => SendSurveyInvite(user))"
+                                                               Color="Color.Secondary" Variant="Variant.Outlined"
+                                                               Size="Size.Small" StartIcon="@Icons.Material.Filled.Email">
+                                                        Send Survey
+                                                    </MudButton>
+
+                                                    <MudTextField @bind-Value="user.CustomSurveyUrl"
+                                                                  Placeholder="Optional custom URL"
+                                                                  HelperText="Leave empty to use default"
+                                                                  Immediate="true" />
+                                                </MudStack>
                                             </MudStack>
                                         </MudListItem>
-
                                     }
 
 
@@ -74,7 +81,7 @@
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
     private List<ClassSummaryDto> Classes;
-    private Dictionary<Guid, List<RegisteredUsersDto>> RegisteredUsers = new();
+    private Dictionary<Guid, List<RegisteredUserViewModel>> RegisteredUsers = new();
     private Dictionary<Guid, bool> IsUserLoading = new();
 
     private bool isLoading = true;
@@ -105,7 +112,12 @@
         try
         {
             var users = await GetRegisteredUsersUseCase.ExecuteAsync(classId);
-            RegisteredUsers[classId] = users ?? new();
+            RegisteredUsers[classId] = users?
+                .Select(dto => new RegisteredUserViewModel
+                {
+                    Dto = dto,
+                    CustomSurveyUrl = string.Empty
+                }).ToList() ?? new();
         }
         catch
         {
@@ -118,28 +130,31 @@
         }
     }
 
-    private async Task SendSurveyInvite(RegisteredUsersDto user)
+    private async Task SendSurveyInvite(RegisteredUserViewModel user)
     {
         try
         {
             var userDto = new UserDto
             {
-                Id = user.Id,
-                Name = user.UserName,
-                EmailSMTP = user.EmailSMTP
+                Id = user.Dto.Id,
+                Name = user.Dto.UserName,
+                EmailSMTP = user.Dto.EmailSMTP
             };
 
-            await EmailService.SendSurveyInviteAsync(userDto);
+            var url = !string.IsNullOrWhiteSpace(user.CustomSurveyUrl)
+                ? user.CustomSurveyUrl
+                : $"{Config["Survey:InviteUrl"]}?classId={SubjectId}";
 
-            Snackbar.Add($"Survey invite sent to {user.UserName}", MudBlazor.Severity.Success);
+            await EmailService.SendSurveyInviteAsync(userDto, url);
+
+            Snackbar.Add($"Survey invite sent to {user.Dto.UserName}", MudBlazor.Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to send survey to {user.UserName}", MudBlazor.Severity.Error);
+            Snackbar.Add($"Failed to send survey to {user.Dto.UserName}: {ex.Message}", MudBlazor.Severity.Error);
         }
-        
-        
     }
+
 
     private void Close() => MudDialog.Cancel();
 }

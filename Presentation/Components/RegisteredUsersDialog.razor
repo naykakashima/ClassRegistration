@@ -5,6 +5,7 @@
 @inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
 @inject UpdateAttendanceUseCase UpdateAttendanceUseCase
 @inject ISnackbar Snackbar
+@inject IConfiguration Config
 @inject IEmailService EmailService
 
 <MudDialog>
@@ -28,17 +29,17 @@
                 </HeaderContent>
 
                 <RowTemplate>
-                    <MudTd>@context.UserName</MudTd>
-                    <MudTd>@context.EmailSMTP</MudTd>
+                    <MudTd>@context.Dto.UserName</MudTd>
+                    <MudTd>@context.Dto.EmailSMTP</MudTd>
                     <MudTd>
-                        <MudCheckBox T="bool" @bind-Value="context.IsAttended" Disabled="saveInProgress" />
+                        <MudCheckBox T="bool" @bind-Value="context.Dto.IsAttended" Disabled="saveInProgress" />
                     </MudTd>
                     <MudTd>
                         <MudButton Color="Color.Secondary" Variant="Variant.Outlined" Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.Email"
-                                   Disabled="sendInProgressUserId == context.Id"
+                                   Disabled="sendInProgressUserId == context.Dto.Id"
                                    OnClick="() => SendSurveyInvite(context)">
-                            @if (sendInProgressUserId == context.Id)
+                            @if (sendInProgressUserId == context.Dto.Id)
                             {
                                 <MudProgressCircular Size="Size.Small" Color="Color.Inherit" />
                             }
@@ -47,8 +48,14 @@
                                 <span>Send Survey</span>
                             }
                         </MudButton>
+
+                        <MudTextField @bind-Value="context.CustomSurveyUrl"
+                                      Placeholder="Optional custom URL"
+                                      HelperText="Leave empty to use default URL"
+                                      Immediate="true" />
                     </MudTd>
                 </RowTemplate>
+
 
             </MudTable>
         }
@@ -74,7 +81,8 @@
     [Parameter] public Guid ClassId { get; set; }
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; }
 
-    private List<RegisteredUsersDto> Users = new();
+    private List<RegisteredUserViewModel> Users = new();
+
     private bool isLoading = true;
     private bool saveInProgress = false;
     private Guid? sendInProgressUserId = null;
@@ -83,13 +91,19 @@
     {
         try
         {
-            Users = await GetRegisteredUsersUseCase.ExecuteAsync(ClassId);
+            var userDtos = await GetRegisteredUsersUseCase.ExecuteAsync(ClassId);
+            Users = userDtos.Select(dto => new RegisteredUserViewModel
+            {
+                Dto = dto,
+                UseCustomUrl = false,
+                CustomSurveyUrl = string.Empty
+            }).ToList();
 
             // Ensure IsAttended reflects the actual AttendedAt status
             foreach (var user in Users)
             {
                 // This will automatically set IsAttended based on AttendedAt
-                user.IsAttended = user.AttendedAt.HasValue;
+                user.Dto.IsAttended = user.Dto.AttendedAt.HasValue;
             }
         }
         catch (Exception ex)
@@ -111,8 +125,8 @@
             var updates = Users
                 .Select(u => new AttendanceUpdateDto
                 {
-                    RegistrationId = u.RegistrationId,
-                    AttendedAt = u.IsAttended ? DateTime.UtcNow : null
+                    RegistrationId = u.Dto.RegistrationId,
+                    AttendedAt = u.Dto.IsAttended ? DateTime.UtcNow : null
                 })
                 .ToList();
 
@@ -131,25 +145,30 @@
         }
     }
 
-    private async Task SendSurveyInvite(RegisteredUsersDto user)
+    private async Task SendSurveyInvite(RegisteredUserViewModel user)
     {
-        sendInProgressUserId = user.Id;
+        sendInProgressUserId = user.Dto.Id;
+
         try
         {
             var userDto = new UserDto
             {
-                Id = user.Id,
-                Name = user.UserName,
-                EmailSMTP = user.EmailSMTP
+                Id = user.Dto.Id,
+                Name = user.Dto.UserName,
+                EmailSMTP = user.Dto.EmailSMTP
             };
 
-            await EmailService.SendSurveyInviteAsync(userDto);
+            var url = !string.IsNullOrWhiteSpace(user.CustomSurveyUrl)
+                ? user.CustomSurveyUrl
+                : $"{Config["Survey:InviteUrl"]}";
 
-            Snackbar.Add($"Survey sent to {user.UserName}.", MudBlazor.Severity.Success);
+            await EmailService.SendSurveyInviteAsync(userDto, url);
+
+            Snackbar.Add($"Survey invite sent to {user.Dto.UserName}", MudBlazor.Severity.Success);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to send survey to {user.UserName}: {ex.Message}", MudBlazor.Severity.Error);
+            Snackbar.Add($"Failed to send survey to {user.Dto.UserName}: {ex.Message}", MudBlazor.Severity.Error);
         }
         finally
         {
@@ -157,4 +176,7 @@
             StateHasChanged();
         }
     }
+
+
+
 }

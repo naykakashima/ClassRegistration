@@ -62,7 +62,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
             return sb.ToString();
         }
 
-        public async Task SendSurveyInviteAsync(UserDto user)
+        public async Task SendSurveyInviteAsync(UserDto user, string customSurveyUrl)
         {
             var smtpSection = _config.GetSection("Smtp");
             var smtpHost = smtpSection["Host"];
@@ -74,7 +74,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
                 From = new MailAddress(fromEmail),
                 Subject = "We'd love your feedback!",
                 IsBodyHtml = true,
-                Body = GenerateSurveyHtml(user)
+                Body = GenerateSurveyHtml(user, customSurveyUrl)
             };
             mail.To.Add(user.EmailSMTP);
 
@@ -95,10 +95,9 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
             }
         }
 
-        private string GenerateSurveyHtml(UserDto user)
-        {
-            var surveyUrl = _config["Survey:InviteUrl"];
 
+        private string GenerateSurveyHtml(UserDto user, string surveyUrl)
+        {
             var sb = new StringBuilder();
             sb.AppendLine($"<h2>Hi {user.Name},</h2>");
             sb.AppendLine("<p>Thank you for attending the class! We’d love your feedback.</p>");
@@ -106,6 +105,8 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
             sb.AppendLine("<p>Thanks again!</p>");
             return sb.ToString();
         }
+
+
 
 
     }
