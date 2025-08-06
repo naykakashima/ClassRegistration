@@ -97,7 +97,7 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
 
         private string GenerateSurveyHtml(UserDto user)
         {
-            var surveyUrl = $"https://yourfrontendurl.com/surveysavailable?userId={user.Id}";
+            var surveyUrl = _config["Survey:InviteUrl"];
 
             var sb = new StringBuilder();
             sb.AppendLine($"<h2>Hi {user.Name},</h2>");
