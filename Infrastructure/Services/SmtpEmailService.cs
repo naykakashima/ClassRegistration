@@ -61,5 +61,52 @@ namespace ClassRegistrationApplication2025.Infrastructure.Services
             sb.AppendLine("<p>Thank you.</p>");
             return sb.ToString();
         }
+
+        public async Task SendSurveyInviteAsync(UserDto user)
+        {
+            var smtpSection = _config.GetSection("Smtp");
+            var smtpHost = smtpSection["Host"];
+            var smtpPort = int.Parse(smtpSection["Port"]);
+            var fromEmail = smtpSection["From"];
+
+            var mail = new MailMessage
+            {
+                From = new MailAddress(fromEmail),
+                Subject = "We'd love your feedback!",
+                IsBodyHtml = true,
+                Body = GenerateSurveyHtml(user)
+            };
+            mail.To.Add(user.EmailSMTP);
+
+            using var client = new SmtpClient(smtpHost, smtpPort)
+            {
+                UseDefaultCredentials = true,
+                EnableSsl = false
+            };
+
+            try
+            {
+                await client.SendMailAsync(mail);
+                _logger.LogInformation("Survey invite sent to {Email}", user.EmailSMTP);
+            }
+            catch (SmtpException ex)
+            {
+                _logger.LogError(ex, "Failed to send survey invite to {Email}", user.EmailSMTP);
+            }
+        }
+
+        private string GenerateSurveyHtml(UserDto user)
+        {
+            var surveyUrl = $"https://yourfrontendurl.com/surveysavailable?userId={user.Id}";
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"<h2>Hi {user.Name},</h2>");
+            sb.AppendLine("<p>Thank you for attending the class! We’d love your feedback.</p>");
+            sb.AppendLine($"<p><a href=\"{surveyUrl}\" style=\"padding:10px 20px; background-color:#1976D2; color:white; text-decoration:none; border-radius:4px;\">Take the Survey</a></p>");
+            sb.AppendLine("<p>Thanks again!</p>");
+            return sb.ToString();
+        }
+
+
     }
 }

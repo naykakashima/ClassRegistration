@@ -1,5 +1,8 @@
 ﻿@using ClassRegistrationApplication2025.Application.DTOs
 @using ClassRegistrationApplication2025.Application.UseCases
+@using ClassRegistrationApplication2025.Infrastructure.Persistence.Interfaces
+@inject IEmailService EmailService
+@inject ISnackbar Snackbar
 @inject GetAllClassesBySubjectIdUseCase GetAllClassesBySubjectIdUseCase
 @inject GetRegisteredUsersUseCase GetRegisteredUsersUseCase
 
@@ -35,8 +38,21 @@
                                 <MudList T="string">
                                     @foreach (var user in users)
                                     {
-                                        <MudListItem Text="@user.UserName" Icon="@Icons.Material.Filled.Person" />
+                                        <MudListItem>
+                                            <MudStack Row="true" Class="d-flex justify-space-between">
+                                                <MudText Typo="Typo.body1">@user.UserName</MudText>
+
+                                                <MudButton OnClick="@(() => SendSurveyInvite(user))"
+                                                           Color="Color.Secondary" Variant="Variant.Outlined"
+                                                           Size="Size.Small" StartIcon="@Icons.Material.Filled.Email">
+                                                    Send Survey
+                                                </MudButton>
+                                            </MudStack>
+                                        </MudListItem>
+
                                     }
+
+
 
                                 </MudList>
                                 
@@ -102,5 +118,29 @@
         }
     }
 
+    private async Task SendSurveyInvite(RegisteredUsersDto user)
+    {
+        try
+        {
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Name = user.UserName,
+                EmailSMTP = user.EmailSMTP
+            };
+
+            await EmailService.SendSurveyInviteAsync(userDto);
+
+            Snackbar.Add($"Survey invite sent to {user.UserName}", MudBlazor.Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to send survey to {user.UserName}", MudBlazor.Severity.Error);
+        }
+        
+        
+    }
+
     private void Close() => MudDialog.Cancel();
 }
+
