@@ -136,7 +136,7 @@
             // Headers
             string[] headers = {
             "Class Name", "Session Name", "Presenter", "Date", "Start Time", "End Time",
-            "User ID", "User Name", "Registered At"
+            "User ID", "User Name", "Registered At", "Attended At"
         };
 
             for (int i = 0; i < headers.Length; i++)
@@ -166,6 +166,7 @@
                     worksheet.Cell(row, 7).Value = user.UserID;
                     worksheet.Cell(row, 8).Value = user.UserName;
                     worksheet.Cell(row, 9).Value = user.RegisteredAt.ToString("yyyy-MM-dd HH:mm");
+                    worksheet.Cell(row, 10).Value = user.AttendedAt?.ToString("yyyy-MM-dd HH:mm") ?? "Not Attended";
 
                     row++;
                     totalRegistrations++;
