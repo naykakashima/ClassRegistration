@@ -79,7 +79,7 @@
         {
             await SurveyService.AddAsync(Survey);
             Snackbar.Add("Survey successfully saved!", Severity.Success);
-            Nav.NavigateTo($"/subjects/{subjectId}");
+            Nav.NavigateTo("/subjects/manage-subjects");
         }
         catch (Exception ex)
         {

@@ -8,28 +8,31 @@
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Nav
 
-<MudPaper Class="pa-6">
+<MudPaper Class="pa-6 mx-auto mt-6" Elevation="3" Style="max-width: 900px;">
     <MudGrid>
         <MudItem xs="12">
-            <MudText Typo="Typo.h5" Class="mb-2">My Created Surveys</MudText>
-            <MudText Typo="Typo.body2" Class="mb-4" Color="Color.Secondary">
+            <MudText Typo="Typo.h4" Class="mb-1">My Created Surveys</MudText>
+            <MudText Typo="Typo.body2" Class="mb-4" Color="Color.Dark">
                 Here you can view the surveys you’ve created and check how many responses each one received.
             </MudText>
         </MudItem>
+
         <MudItem xs="12">
             @if (surveys == null)
             {
-                <MudProgressCircular Indeterminate="true" />
+                <div class="d-flex justify-center my-6">
+                    <MudProgressCircular Indeterminate="true" Size="Size.Large" Color="Color.Primary" />
+                </div>
             }
             else if (!surveys.Any())
             {
-                <MudAlert Severity="Severity.Info" Variant="Variant.Filled">
+                <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Dense="true">
                     You haven’t created any surveys yet.
                 </MudAlert>
             }
             else
             {
-                <MudTable Items="surveys" Elevation="1" Dense="true" Hover="true" Bordered="true" Class="mt-2">
+                <MudTable Items="surveys" Elevation="1" Dense="false" Hover="true" Bordered="false" Class="mt-2">
                     <HeaderContent>
                         <MudTh>Title</MudTh>
                         <MudTh>Responses</MudTh>
@@ -38,7 +41,7 @@
                     <RowTemplate>
                         <MudTd DataLabel="Title">@context.Title</MudTd>
                         <MudTd DataLabel="Responses">@context.ResponseCount</MudTd>
-                        <MudTd Class="flex justify-items-center">
+                        <MudTd Class="d-flex justify-end">
                             <MudButton Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled"
                                        OnClick="@(() => ViewResponses(context.Id))">
                                 View
@@ -50,6 +53,7 @@
         </MudItem>
     </MudGrid>
 </MudPaper>
+
 
 
 @code {

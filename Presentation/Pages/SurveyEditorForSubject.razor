@@ -160,7 +160,7 @@ else
         {
             await SurveyService.DeleteAsync(Survey.Id);
             Snackbar.Add("Survey deleted successfully.", Severity.Success);
-            Nav.NavigateTo($"/subjects/{subjectId}"); // Navigate back to subject page
+            Nav.NavigateTo("/subjects/manage-subjects"); // Navigate back to subject page
         }
         catch (Exception ex)
         {

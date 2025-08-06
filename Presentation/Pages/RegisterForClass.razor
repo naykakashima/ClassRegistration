@@ -172,7 +172,7 @@
             {
                 Snackbar.Add("Registration successful!", Severity.Success);
                 await Task.Delay(1500); // Give user time to see feedback
-                Navigation.NavigateTo("/classes");
+                Navigation.NavigateTo($"/subjects/{SubjectId}");
             }
             else
             {
