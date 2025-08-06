@@ -17,8 +17,18 @@
 
 <title>Edit Survey for Subject</title>
 
-<MudStack Row="true">
+<MudStack Class="d-flex justify-space-between flex-grow-1 gap-4" Row="true">
     <MudText Typo="Typo.h5">Editing Survey: @subjectTitle</MudText>
+
+    <MudPaper Class="pa-4 d-inline-flex align-center gap-4 pa-4">
+        <MudToggleIconButton @bind-Toggled="_isReleased"
+                             Icon="@Icons.Material.Filled.AlarmOff"
+                             Color="@Color.Error"
+                             ToggledIcon="@Icons.Material.Filled.AlarmOn"
+                             ToggledColor="@Color.Success"
+                             title="@(_isReleased ? "Released" : "Closed")" />
+        <MudText>Survey is @(_isReleased ? "Released" : "Closed")</MudText>
+    </MudPaper>
 </MudStack>
 
 @if (Survey == null)
@@ -44,6 +54,9 @@ else
     [Parameter] public Guid subjectId { get; set; }
     [Parameter] public string subjectTitle { get; set; }
 
+    private bool _isReleased;
+    private bool _tempIsReleased;
+
     private SubjectSurveyDto? Survey;
     private string Serialized = "";
 
@@ -57,7 +70,9 @@ else
             return;
         }
 
-        Serialized = Survey.JsonDefinition;
+        Serialized = Survey.JsonDefinition; 
+        _isReleased = Survey.IsReleased;
+        _tempIsReleased = _isReleased; // create a snapshot of original value
     }
 
     private Task OnSurveyChanged(SurveyModel updated)
@@ -83,6 +98,23 @@ else
 
         try
         {
+            if (_tempIsReleased != _isReleased) // only send update if state changed
+            {
+                if (_isReleased)
+                {
+                    await SurveyService.ReleaseSurveyAsync(Survey.Id);
+                    Snackbar.Add("Survey is now released to students.", Severity.Success);
+                }
+                else
+                {
+                    await SurveyService.CloseSurveyAsync(Survey.Id);
+                    Snackbar.Add("Survey has been closed.", Severity.Info);
+                }
+
+                // update the original snapshot
+                _tempIsReleased = _isReleased;
+            }
+
             await SurveyService.UpdateAsync(Survey);
             Snackbar.Add("Survey successfully updated!", Severity.Success);
             Nav.NavigateTo($"/subjects/manage-subjects");
@@ -90,8 +122,13 @@ else
         catch (Exception ex)
         {
             Snackbar.Add($"Error updating survey: {ex.Message}", Severity.Error);
+
+            // roll back to previous state in case of failure
+            _isReleased = _tempIsReleased;
+            StateHasChanged();
         }
     }
+
 
     private async Task ConfirmDelete()
     {
