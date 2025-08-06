@@ -48,6 +48,23 @@
                     </MudCard>
                 </MudItem>
 
+                <MudItem xs="12" md="4" Class="pa-2">
+                    <MudCard Elevation="8" Class="h-100 d-flex justify-center">
+                        <MudCardHeader Class="d-flex justify-center">
+                            <MudText Align="Align.Center" Typo="Typo.h6">View Surveys</MudText>
+                        </MudCardHeader>
+                        <MudCardContent Class="d-flex justify-center">
+                            <MudText Align="Align.Center">Participate in available surveys related to your registered classes.</MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="d-flex justify-center">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary">
+                                <CompactNavLink Href="/surveysavailable">View Surveys</CompactNavLink>
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+
+
                 <!-- Class Manager section (visible only to managers) -->
                 @if (currentUser.Role >= Role.ClassManager)
                 {
@@ -64,6 +81,21 @@
                                           Color="Color.Secondary" 
                                           >
                                     <CompactNavLink Href="/subjects">Create Classes</CompactNavLink>
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                    <MudItem xs="12" md="4" Class="pa-2">
+                        <MudCard Elevation="8" Class="h-100 d-flex justify-center">
+                            <MudCardHeader Class="d-flex justify-center">
+                                <MudText Align="Align.Center" Typo="Typo.h6">Survey Results</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="d-flex justify-center">
+                                <MudText Align="Align.Center">View responses from surveys you've created for your classes.</MudText>
+                            </MudCardContent>
+                            <MudCardActions Class="d-flex justify-center">
+                                <MudButton Variant="Variant.Filled" Color="Color.Secondary">
+                                    <CompactNavLink Href="/surveys/mycreated">View Results</CompactNavLink>
                                 </MudButton>
                             </MudCardActions>
                         </MudCard>
@@ -100,9 +132,11 @@
                 <MudText>This system allows you to:</MudText>
                 <MudList T="string">
                     <MudListItem>Browse and register for available classes</MudListItem>
+                    <MudListItem>Participate in class-related surveys</MudListItem>
                     @if (currentUser.Role >= Role.ClassManager)
                     {
                         <MudListItem>Create and manage training classes</MudListItem>
+                        <MudListItem>View survey responses for your created classes</MudListItem>
                     }
                     @if (currentUser.Role == Role.SuperAdmin)
                     {

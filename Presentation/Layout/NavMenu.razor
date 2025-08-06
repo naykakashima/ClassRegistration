@@ -8,21 +8,26 @@
 @inject IUserService UserService
 
 <MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <!-- Always visible -->
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Dashboard</MudNavLink>
+    <MudNavLink Href="/subjects" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MenuBook">Subjects</MudNavLink>
+    <MudNavLink Href="/surveysavailable" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Quiz">My Surveys</MudNavLink>
 
+    <!-- ClassManager and above -->
     @if (currentUser?.Role >= Role.ClassManager)
     {
-        <MudNavLink Href="/create-subject" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AddBox">Create Subjects</MudNavLink>
-        <MudNavLink Href="/surveys/mycreated" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AssignmentReturned">View Survey Responses</MudNavLink>
+        <MudNavGroup Title="Management" Icon="@Icons.Material.Filled.ManageAccounts">
+            <MudNavLink Href="/surveys/mycreated" Icon="@Icons.Material.Filled.AssignmentReturned">Survey Responses</MudNavLink>
+        </MudNavGroup>
     }
 
+    <!-- SuperAdmin only -->
     @if (currentUser?.Role == Role.SuperAdmin)
     {
-        <MudNavLink Href="/admin/roles" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.AdminPanelSettings">Role Management</MudNavLink>
+        <MudNavGroup Title="Admin Tools" Icon="@Icons.Material.Filled.AdminPanelSettings">
+            <MudNavLink Href="/admin/roles" Icon="@Icons.Material.Filled.Security">Manage Roles</MudNavLink>
+        </MudNavGroup>
     }
-
-    <MudNavLink Href="/subjects" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.FormatListBulleted">View Subjects</MudNavLink>
-    <MudNavLink Href="/surveysavailable" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.ListAlt">View Surveys</MudNavLink>
 </MudNavMenu>
 
 @code {
