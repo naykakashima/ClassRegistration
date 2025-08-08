@@ -13,6 +13,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Hosting.StaticWebAssets;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using SurveyBuilder.Services;
@@ -67,14 +68,9 @@ builder.Services.AddScoped<GetSubjectIdFromClassIdUseCase>();
 builder.Services.AddScoped<UpdateAttendanceUseCase>();
 
 
-
-
-
-
-
-
-
 builder.Services.Configure<AdSettings>(builder.Configuration.GetSection("AdSettings"));
+
+StaticWebAssetsLoader.UseStaticWebAssets(builder.Environment, builder.Configuration);
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
     .AddNegotiate();
@@ -98,7 +94,7 @@ app.UseHttpsRedirection();
 
 
 app.UseAntiforgery();
-
+app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
